@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Card from '../components/Card.astro';
+import ThumbnailCard from '../components/ThumbnailCard.astro';
+import AdSense from '../components/AdSense.astro';
+import { getCollection } from 'astro:content';
+import { getPostSummary } from '../utils/summary';
+import { getDynamicCategories } from '../utils/categories';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const allPosts = await getCollection('blog', ({ data }) => {
+  return import.meta.env.PROD ? !data.draft : true;
+});
+
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const recentPosts = sortedPosts.slice(0, 12);
+
+const { primaryCategories, secondaryCategories } = await getDynamicCategories(3);
+
+const categories = [
+  { name: '전체 글', href: `${base}/blog/` },
+  { name: '갤러리', href: `${base}/gallery/` },
+  ...primaryCategories.map(c => ({ name: c.name, href: c.href })),
+  ...(secondaryCategories.length > 0 ? [{ name: `기타 (+${secondaryCategories.length})`, href: `${base}/categories/` }] : []),
+];
+---
+
+<BaseLayout
+  title="앱시안(absian) - AI 도구 & 실전 자동화 테크"
+  description="AI 생산성 도구, 실전 개발 팁, 자동화 부업 파이프라인 및 최신 테크 트렌드 전문 블로그"
+>
+  <section class="bg-gradient-to-b from-blue-50/70 via-slate-50 to-slate-50 border-b border-slate-200/60 py-16 sm:py-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/80 text-blue-700 text-xs font-semibold mb-6">
+        <span>✨ 2026 최신 AI & 스마트 자동화 테크 매거진</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto mb-6">
+        일상을 혁신하는 <span class="text-blue-600">AI 도구</span>와 <br class="hidden sm:inline" />실전 자동화 테크 가이드
+      </h1>
+      <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
+        검증된 개발 팁부터 무자본 디지털 노마드 부업 전략까지, 생산성을 극대화하는 실질적인 인사이트를 제공합니다.
+      </p>
+      
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        {categories.map(cat => (
+          <a
+            href={cat.href}
+            class="px-4 py-2 bg-white hover:bg-blue-600 hover:text-white text-slate-700 font-medium text-xs rounded-xl border border-slate-200 shadow-sm transition-all"
+          >
+            {cat.name}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AdSense slotId="1234567890" type="top-banner" />
+  </div>
+
+  <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header with View Switcher -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">최신 아티클</h2>
+        <p class="text-sm text-slate-500 mt-1">에이전트가 엄선한 고품질 테크 & 생산성 가이드</p>
+      </div>
+
+      <div class="flex items-center gap-3 self-start sm:self-auto">
+        <!-- View Switcher Tabs -->
+        <div class="inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600">
+          <button
+            id="home-btn-feed"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs transition-all cursor-pointer"
+            title="피드형 (상세 요약)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+            <span>피드형</span>
+          </button>
+          <button
+            id="home-btn-grid"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
+            title="썸네일 모아보기"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span>🖼️ 썸네일형</span>
+          </button>
+        </div>
+
+        <a href={`${base}/blog/`} class="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">
+          전체보기 →
+        </a>
+      </div>
+    </div>
+
+    {recentPosts.length > 0 ? (
+      <>
+        <!-- 1. 카드 피드 뷰 (3열, 텍스트 중심) -->
+        <div id="home-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {recentPosts.map(post => (
+            <Card
+              title={post.data.title}
+              description={post.data.description}
+              pubDate={post.data.pubDate}
+              slug={post.slug}
+              category={post.data.category}
+              readingTime={post.data.readingTime}
+              heroImage={post.data.heroImage}
+              tags={post.data.tags}
+            />
+          ))}
+        </div>
+
+        <!-- 2. 컴팩트 썸네일 그리드 뷰 (4열, 썸네일 중심) -->
+        <div id="home-grid-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {recentPosts.map(post => (
+            <ThumbnailCard
+              title={post.data.title}
+              summary={getPostSummary(post)}
+              description={post.data.description}
+              slug={post.slug}
+              category={post.data.category}
+              pubDate={post.data.pubDate}
+              readingTime={post.data.readingTime}
+              heroImage={post.data.heroImage}
+            />
+          ))}
+        </div>
+      </>
+    ) : (
+      <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
+        <p class="text-slate-500 text-sm">아직 등록된 포스트가 없습니다. 에이전트를 실행하여 첫 글을 발행해보세요!</p>
+      </div>
+    )}
+
+    <div class="mt-12">
+      <AdSense slotId="3456789012" type="multiplex" />
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      const feedBtn = document.getElementById('home-btn-feed');
+      const gridBtn = document.getElementById('home-btn-grid');
+      const feedContainer = document.getElementById('home-feed-container');
+      const gridContainer = document.getElementById('home-grid-container');
+
+      if (!feedBtn || !gridBtn || !feedContainer || !gridContainer) return;
+
+      function setView(mode) {
+        if (mode === 'grid') {
+          feedContainer.classList.add('hidden');
+          gridContainer.classList.remove('hidden');
+
+          gridBtn.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
+          gridBtn.classList.remove('text-slate-500');
+
+          feedBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
+          feedBtn.classList.add('text-slate-500');
+          localStorage.setItem('absian_view_mode', 'grid');
+        } else {
+          gridContainer.classList.add('hidden');
+          feedContainer.classList.remove('hidden');
+
+          feedBtn.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
+          feedBtn.classList.remove('text-slate-500');
+
+          gridBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
+          gridBtn.classList.add('text-slate-500');
+          localStorage.setItem('absian_view_mode', 'feed');
+        }
+      }
+
+      feedBtn.addEventListener('click', () => setView('feed'));
+      gridBtn.addEventListener('click', () => setView('grid'));
+
+      // 로컬스토리지에 저장된 사용자 선호 모드 동기화
+      const savedMode = localStorage.getItem('absian_view_mode');
+      if (savedMode === 'grid') {
+        setView('grid');
+      }
+    })();
+  </script>
+</BaseLayout>

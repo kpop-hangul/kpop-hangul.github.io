@@ -1,0 +1,35 @@
+{
+  "blogId": "kpop-hangul",
+  "site": {
+    "name": "K-Pop Hangul | Learn Korean with K-Pop Hits",
+    "shortName": "K-Pop Hangul",
+    "slogan": "Master Korean Lyrics, Grammar & Vocabulary with K-Pop Hits",
+    "description": "Learn the Korean language step-by-step through top charting K-Pop songs from Melon and Spotify. Explore song lyrics breakdowns, Hangul grammar, vocabulary, and pronunciation by genre, artist, and difficulty.",
+    "url": "https://kpop-hangul.github.io",
+    "basePath": "/",
+    "author": "K-Pop Hangul Team"
+  },
+  "categories": {
+    "primary": ["Beginner (Level 1)", "Intermediate (Level 2)", "Advanced (Level 3)", "Dance & Pop", "R&B & Soul", "Hip-Hop & Rap", "Ballad & OST"],
+    "topLimit": 3
+  },
+  "seo": {
+    "naverVerification": "",
+    "googleVerification": "",
+    "gaId": ""
+  },
+  "monetization": {
+    "adsenseClientId": "",
+    "adfitUnitId": "",
+    "coupangPartnersId": "",
+    "gumroadUrl": ""
+  },
+  "telegram": {
+    "botUsername": ""
+  },
+  "ai": {
+    "provider": "antigravity_cli",
+    "model": "gemini-3.8-flash-high",
+    "tone": "Engaging, encouraging, educational, and structured in clear English"
+  }
+}

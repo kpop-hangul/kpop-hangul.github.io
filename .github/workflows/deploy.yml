@@ -1,0 +1,106 @@
+name: Deploy Astro Blog to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+env:
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+jobs:
+  build:
+    name: Build Astro Static Site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'blog-frontend/package.json'
+
+      - name: Install dependencies
+        run: |
+          cd blog-frontend
+          npm install
+
+      - name: Build with Astro
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+        run: |
+          cd blog-frontend
+          npx astro build
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: blog-frontend/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Notify Telegram on Success
+        if: success()
+        run: |
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+            echo "⚠️ TELEGRAM_BOT_TOKEN 시크릿이 GitHub 저장소에 등록되지 않았습니다."
+            echo "👉 GitHub 저장소(Settings -> Secrets and variables -> Actions)에 등록해주세요."
+            exit 0
+          fi
+          python3 -c "
+          import urllib.request, json
+          token = '${{ secrets.TELEGRAM_BOT_TOKEN }}'
+          chat_id = '${{ secrets.TELEGRAM_CHAT_ID }}'
+          text = '🚀 <b>[GitHub Actions 배포 성공]</b>\n━━━━━━━━━━━━━━━━━━━━\n📦 <b>저장소</b>: absianp/absianp.github.io\n🌐 <b>배포 URL</b>: https://absianp.github.io\n✅ <i>전체 포스팅 및 웹페이지 배포가 완료되었습니다!</i>'
+          data = json.dumps({'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}).encode('utf-8')
+          req = urllib.request.Request(f'https://api.telegram.org/bot{token}/sendMessage', data=data, headers={'Content-Type': 'application/json'})
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  print('✅ Telegram 알림 전송 성공:', resp.status)
+          except Exception as e:
+              print('❌ Telegram 알림 전송 실패:', e)
+          "
+
+      - name: Notify Telegram on Failure
+        if: failure()
+        run: |
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+            echo "⚠️ TELEGRAM_BOT_TOKEN 시크릿이 GitHub 저장소에 등록되지 않았습니다."
+            exit 0
+          fi
+          python3 -c "
+          import urllib.request, json
+          token = '${{ secrets.TELEGRAM_BOT_TOKEN }}'
+          chat_id = '${{ secrets.TELEGRAM_CHAT_ID }}'
+          text = '🚨 <b>[GitHub Actions 빌드/배포 실패 경보]</b>\n━━━━━━━━━━━━━━━━━━━━\n⚠️ GitHub Actions 파이프라인에서 오류가 발생했습니다.\n🔍 <b>확인 링크</b>: https://github.com/absianp/absianp.github.io/actions'
+          data = json.dumps({'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}).encode('utf-8')
+          req = urllib.request.Request(f'https://api.telegram.org/bot{token}/sendMessage', data=data, headers={'Content-Type': 'application/json'})
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  print('✅ Telegram 실패 경보 전송 성공:', resp.status)
+          except Exception as e:
+              print('❌ Telegram 실패 경보 전송 실패:', e)
+          "

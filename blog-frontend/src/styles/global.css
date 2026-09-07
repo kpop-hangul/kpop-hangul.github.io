@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col;
+  }
+}
+
+/* Custom Ad Container Styling */
+.ad-slot-container {
+  @apply my-8 p-4 bg-slate-100/80 rounded-xl border border-dashed border-slate-300 text-center overflow-hidden;
+}
+
+.ad-label {
+  @apply text-[11px] font-medium tracking-wider text-slate-400 uppercase mb-2 block;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

@@ -1,0 +1,232 @@
+---
+import { getDynamicCategories } from '../utils/categories';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// 상단에는 글 수가 가장 많은 대표 카테고리 최대 3개만 고정 배치하고, 나머지는 '더보기' 드롭다운으로 자동 분류
+const { primaryCategories, secondaryCategories, allCategories } = await getDynamicCategories(3);
+---
+
+<header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 transition-all duration-200">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <!-- Logo -->
+    <a href={`${base}/`} class="flex items-center gap-2.5 group flex-shrink-0">
+      <img
+        src={`${base}/favicon.png`}
+        alt="앱시안(absian) 로고"
+        class="w-9 h-9 object-contain group-hover:scale-105 transition-transform"
+      />
+      <div class="flex flex-col">
+        <span class="font-bold text-slate-900 text-lg tracking-tight group-hover:text-blue-600 transition-colors">
+          앱시안(absian)
+        </span>
+        <span class="text-[10px] text-slate-500 -mt-1 font-medium tracking-wide uppercase">AI & Tech Insights</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-600">
+      <a
+        href={`${base}/`}
+        class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors"
+      >
+        홈
+      </a>
+      <a
+        href={`${base}/blog/`}
+        class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors"
+      >
+        전체 글
+      </a>
+      <a
+        href={`${base}/gallery/`}
+        class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors"
+      >
+        갤러리
+      </a>
+
+      <!-- 1. 대표 카테고리 (글 수가 많은 상위 3개 자동 노출) -->
+      {primaryCategories.map(cat => (
+        <a
+          href={cat.href}
+          class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors whitespace-nowrap"
+        >
+          {cat.name}
+        </a>
+      ))}
+
+      <!-- 2. 기타 / 추가 서브 카테고리 드롭다운 (더보기) -->
+      {secondaryCategories.length > 0 ? (
+        <div class="relative group">
+          <button
+            type="button"
+            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors text-slate-600 cursor-pointer"
+          >
+            <span>더보기</span>
+            <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Popover -->
+          <div class="absolute top-full left-0 pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            <div class="bg-white rounded-xl shadow-xl border border-slate-200/90 py-2 overflow-hidden ring-1 ring-black/5">
+              <div class="px-3.5 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between">
+                <span>기타 카테고리</span>
+                <span class="text-[10px] text-blue-600 font-bold">{secondaryCategories.length}개</span>
+              </div>
+              <div class="max-h-64 overflow-y-auto py-1">
+                {secondaryCategories.map(cat => (
+                  <a
+                    href={cat.href}
+                    class="flex items-center justify-between px-3.5 py-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  >
+                    <span class="truncate">{cat.name}</span>
+                    <span class="text-[10px] bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 font-medium ml-2 flex-shrink-0">
+                      {cat.count}편
+                    </span>
+                  </a>
+                ))}
+              </div>
+              <div class="pt-1 border-t border-slate-100">
+                <a
+                  href={`${base}/categories/`}
+                  class="block px-3.5 py-2 text-[11px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  전체 카테고리 허브 보기 →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <a
+          href={`${base}/categories/`}
+          class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors whitespace-nowrap text-slate-500 text-xs"
+          title="카테고리 전체 목록"
+        >
+          카테고리
+        </a>
+      )}
+
+      <a
+        href={`${base}/about/`}
+        class="px-2.5 py-1.5 rounded-lg hover:text-blue-600 hover:bg-slate-100/80 transition-colors"
+      >
+        소개
+      </a>
+    </nav>
+
+    <!-- Right Action (Search / RSS / Contact / Mobile Toggle) -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Search Button (Quick link to Search Page) -->
+      <a
+        href={`${base}/search/`}
+        class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100/80 hover:bg-blue-50 hover:text-blue-600 border border-slate-200/80 rounded-xl transition-all shadow-sm group"
+        title="아티클 검색 (Cmd + K)"
+      >
+        <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span class="hidden sm:inline">검색</span>
+        <kbd class="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">
+          ⌘K
+        </kbd>
+      </a>
+
+      <!-- RSS Feed -->
+      <a
+        href={`${base}/rss.xml`}
+        class="p-2 text-slate-500 hover:text-amber-500 hover:bg-slate-100 rounded-lg transition-colors"
+        title="RSS 피드 구독"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93v-2.83Z" />
+        </svg>
+      </a>
+
+      <!-- Contact Button -->
+      <a
+        href={`${base}/contact/`}
+        class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all"
+      >
+        문의하기
+      </a>
+
+      <!-- Mobile Menu Toggle Button -->
+      <button
+        id="mobile-menu-toggle"
+        type="button"
+        class="md:hidden p-2 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
+        aria-label="모바일 메뉴 열기"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div id="mobile-menu-drawer" class="hidden md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md px-4 py-4 space-y-1.5 shadow-lg">
+    <a href={`${base}/`} class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100">홈</a>
+    <a href={`${base}/blog/`} class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100">전체 글</a>
+    <a href={`${base}/gallery/`} class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100">갤러리</a>
+    
+    <div class="pt-3 pb-1 border-t border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3">
+      주요 카테고리
+    </div>
+    {primaryCategories.map(cat => (
+      <a href={cat.href} class="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600">
+        <span>{cat.name}</span>
+        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{cat.count}편</span>
+      </a>
+    ))}
+
+    {secondaryCategories.length > 0 && (
+      <>
+        <div class="pt-3 pb-1 border-t border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3">
+          기타 카테고리
+        </div>
+        {secondaryCategories.map(cat => (
+          <a href={cat.href} class="flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600">
+            <span>{cat.name}</span>
+            <span class="text-[10px] text-slate-400">{cat.count}편</span>
+          </a>
+        ))}
+      </>
+    )}
+
+    <div class="pt-3 border-t border-slate-100 space-y-1">
+      <a href={`${base}/categories/`} class="block px-3 py-2 rounded-lg text-xs font-bold text-blue-600 hover:bg-blue-50">
+        📑 전체 카테고리 허브 둘러보기 →
+      </a>
+      <a href={`${base}/about/`} class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100">소개</a>
+      <a href={`${base}/contact/`} class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100">문의하기</a>
+    </div>
+  </div>
+</header>
+
+<script is:inline define:vars={{ base }}>
+  // Mobile Hamburger Toggle
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+  const mobileDrawer = document.getElementById('mobile-menu-drawer');
+  if (mobileToggle && mobileDrawer) {
+    mobileToggle.addEventListener('click', () => {
+      mobileDrawer.classList.toggle('hidden');
+    });
+  }
+
+  // Global Shortcut Cmd+K / Ctrl+K to navigate to /search/
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (!window.location.pathname.includes('/search')) {
+        window.location.href = `${base}/search/`;
+      } else {
+        const input = document.getElementById('searchInput');
+        if (input) input.focus();
+      }
+    }
+  });
+</script>

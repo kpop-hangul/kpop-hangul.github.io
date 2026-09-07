@@ -1,0 +1,74 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import AdSense from '../../components/AdSense.astro';
+import { getCategorySlug, getCategoryName } from '../../utils/slug';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => {
+    return import.meta.env.PROD ? !data.draft : true;
+  });
+
+  const knownCategories = ['ai-productivity', 'tech-dev', 'side-income'];
+  const postCategories = allPosts.map(p => getCategorySlug(p.data.category));
+  const uniqueCategorySlugs = [...new Set([...knownCategories, ...postCategories])];
+
+  return uniqueCategorySlugs.map(slug => {
+    const filteredPosts = allPosts
+      .filter(post => getCategorySlug(post.data.category) === slug)
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+    const firstRawName = filteredPosts[0]?.data.category;
+
+    return {
+      params: { category: slug },
+      props: {
+        categorySlug: slug,
+        categoryName: getCategoryName(slug, firstRawName),
+        posts: filteredPosts,
+      },
+    };
+  });
+}
+
+const { categorySlug, categoryName, posts } = Astro.props;
+---
+
+<BaseLayout
+  title={`${categoryName} 아티클 모음`}
+  description={`${categoryName} 카테고리에 등록된 유용한 가이드와 실전 팁 모음입니다.`}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-10">
+      <div class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">카테고리</div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">{categoryName}</h1>
+      <p class="text-slate-600 text-sm mt-2">총 {posts.length}개의 아티클이 등록되어 있습니다.</p>
+    </div>
+
+    <AdSense slotId="1234567890" type="top-banner" />
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
+        {posts.map(post => (
+          <Card
+            title={post.data.title}
+            description={post.data.description}
+            pubDate={post.data.pubDate}
+            slug={post.slug}
+            category={post.data.category}
+            readingTime={post.data.readingTime}
+            heroImage={post.data.heroImage}
+            tags={post.data.tags}
+          />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-16 bg-white rounded-2xl border border-slate-200">
+        <p class="text-slate-500 text-sm">해당 카테고리에 등록된 포스트가 아직 없습니다.</p>
+      </div>
+    )}
+
+    <AdSense slotId="4567890123" type="bottom-banner" />
+  </div>
+</BaseLayout>

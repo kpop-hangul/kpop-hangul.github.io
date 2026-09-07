@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="문의하기 (Contact Us)"
+  description="앱시안(absian) AI & 테크 인사이트 운영팀으로의 문의, 제휴 및 피드백 접수 페이지입니다."
+>
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+          ✉️
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">문의하기</h1>
+      </div>
+      <p class="text-slate-600 text-sm mb-8">
+        질문, 제휴 제안, 콘텐츠 정정 요청 등 언제든지 자유롭게 의견을 남겨주세요.
+      </p>
+
+      <div class="space-y-6">
+        <!-- Direct Email Card -->
+        <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-100 rounded-xl text-xs text-slate-700 leading-relaxed">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p class="font-semibold text-blue-900 mb-1 flex items-center gap-1.5">
+                <span>📩 직접 이메일 수신</span>
+              </p>
+              <p class="text-slate-600">
+                수신 이메일: <code class="bg-white px-2 py-0.5 rounded border border-blue-200 text-blue-700 font-mono font-semibold">absianp@gmail.com</code>
+              </p>
+              <p class="text-slate-500 mt-1">영업일 기준 24~48시간 이내에 신속히 회신해 드립니다.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a
+                href="mailto:absianp@gmail.com?subject=[앱시안 블로그 문의]"
+                class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors text-center"
+              >
+                메일 바로 쓰기 ↗
+              </a>
+              <button
+                type="button"
+                id="copyEmailBtn"
+                class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-medium rounded-lg border border-slate-200 transition-colors"
+                title="이메일 주소 복사"
+              >
+                복사
+              </button>
+            </div>
+          </div>
+          <span id="copyToast" class="hidden text-[11px] text-emerald-600 font-semibold mt-2 inline-block">
+            ✅ 이메일 주소가 클립보드에 복사되었습니다!
+          </span>
+        </div>
+
+        <!-- Contact Form -->
+        <form id="contactForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">이름 / 닉네임</label>
+            <input
+              type="text"
+              id="senderName"
+              required
+              placeholder="홍길동"
+              class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">회신받으실 이메일 주소</label>
+            <input
+              type="email"
+              id="senderEmail"
+              required
+              placeholder="you@example.com"
+              class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">문의 제목</label>
+            <input
+              type="text"
+              id="mailSubject"
+              required
+              placeholder="문의 내용의 핵심을 적어주세요"
+              class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">문의 내용</label>
+            <textarea
+              id="mailBody"
+              rows="5"
+              required
+              placeholder="자세한 문의 사항을 남겨주시면 absianp@gmail.com으로 안전하게 전송됩니다."
+              class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+          >
+            <span>✉️</span>
+            <span>absianp@gmail.com으로 전송하기</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Copy Email to Clipboard
+    const copyBtn = document.getElementById('copyEmailBtn');
+    const toast = document.getElementById('copyToast');
+    if (copyBtn && toast) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText('absianp@gmail.com').then(() => {
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 3000);
+        });
+      });
+    }
+
+    // Submit Form via Mailto Handler
+    const form = document.getElementById('contactForm');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('senderName').value.trim();
+        const email = document.getElementById('senderEmail').value.trim();
+        const subject = document.getElementById('mailSubject').value.trim();
+        const body = document.getElementById('mailBody').value.trim();
+
+        const fullSubject = encodeURIComponent(`[앱시안 문의] ${subject}`);
+        const fullBody = encodeURIComponent(`보낸 사람: ${name} (${email})\n\n[문의 내용]\n${body}`);
+
+        window.location.href = `mailto:absianp@gmail.com?subject=${fullSubject}&body=${fullBody}`;
+      });
+    }
+  </script>
+</BaseLayout>

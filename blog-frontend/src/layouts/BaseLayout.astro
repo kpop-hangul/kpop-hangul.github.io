@@ -1,0 +1,57 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SEO from '../components/SEO.astro';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  article?: boolean;
+  pubDate?: Date;
+  updatedDate?: Date;
+  author?: string;
+  canonicalURL?: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  tags?: string[];
+}
+
+const {
+  title,
+  description = 'AI 생산성 도구, 개발 팁, 스마트 부업 및 테크 트렌드 전문 블로그',
+  image,
+  article,
+  pubDate,
+  updatedDate,
+  author,
+  canonicalURL,
+  faqs,
+  tags,
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <SEO
+      title={title}
+      description={description}
+      image={image}
+      article={article}
+      pubDate={pubDate}
+      updatedDate={updatedDate}
+      author={author}
+      canonicalURL={canonicalURL}
+      faqs={faqs}
+      tags={tags}
+    />
+  </head>
+  <body class="flex flex-col min-h-screen bg-slate-50 text-slate-900">
+    <Header />
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=Auto Blog Telegram Automation Daemon ({{BLOG_ID}} - {{SITE_NAME}})
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{INSTALL_DIR}}/automation-pipeline
+ExecStart=/usr/bin/python3 telegram_daemon.py
+Restart=always
+RestartSec=10
+EnvironmentFile={{INSTALL_DIR}}/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

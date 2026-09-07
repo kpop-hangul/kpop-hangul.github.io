@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import AdSense from '../../components/AdSense.astro';
+import { getTagSlug } from '../../utils/slug';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => {
+    return import.meta.env.PROD ? !data.draft : true;
+  });
+
+  const tagMap = new Map<string, string>();
+  allPosts.forEach(post => {
+    (post.data.tags || []).forEach(tag => {
+      tagMap.set(getTagSlug(tag), tag);
+    });
+  });
+
+  return Array.from(tagMap.entries()).map(([slug, tagName]) => {
+    const filteredPosts = allPosts
+      .filter(post => (post.data.tags || []).some(t => getTagSlug(t) === slug))
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+    return {
+      params: { tag: slug },
+      props: { tagName, posts: filteredPosts },
+    };
+  });
+}
+
+const { tagName, posts } = Astro.props;
+---
+
+<BaseLayout
+  title={`#${tagName} 태그 아티클`}
+  description={`#${tagName} 태그와 관련된 최신 정보 및 포스팅 모음입니다.`}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-10">
+      <div class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">태그 검색</div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">#{tagName}</h1>
+      <p class="text-slate-600 text-sm mt-2">총 {posts.length}개의 관련 아티클</p>
+    </div>
+
+    <AdSense slotId="1234567890" type="top-banner" />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
+      {posts.map(post => (
+        <Card
+          title={post.data.title}
+          description={post.data.description}
+          pubDate={post.data.pubDate}
+          slug={post.slug}
+          category={post.data.category}
+          readingTime={post.data.readingTime}
+          heroImage={post.data.heroImage}
+          tags={post.data.tags}
+        />
+      ))}
+    </div>
+
+    <AdSense slotId="4567890123" type="bottom-banner" />
+  </div>
+</BaseLayout>

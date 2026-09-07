@@ -1,0 +1,33 @@
+---
+export interface Props {
+  headings: Array<{ depth: number; slug: string; text: string }>;
+}
+
+const { headings } = Astro.props;
+
+// H2, H3 헤딩만 목차에 노출
+const filteredHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class="my-6 p-5 bg-blue-50/60 border border-blue-100 rounded-xl">
+    <div class="flex items-center gap-2 font-semibold text-slate-900 text-sm mb-3">
+      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+      <span>목차 (Table of Contents)</span>
+    </div>
+    <ul class="space-y-1.5 text-xs text-slate-600">
+      {filteredHeadings.map(h => (
+        <li class={h.depth === 3 ? 'ml-4 list-disc text-slate-500' : 'font-medium'}>
+          <a
+            href={`#${h.slug}`}
+            class="hover:text-blue-600 hover:underline transition-colors block py-0.5"
+          >
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}

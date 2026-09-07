@@ -1,0 +1,116 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  currentSlug: string;
+  currentCategory: string;
+  currentTags?: string[];
+  limit?: number;
+}
+
+const {
+  currentSlug,
+  currentCategory,
+  currentTags = [],
+  limit = 3,
+} = Astro.props;
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+
+// 현재 글을 제외하고 연관도 점수 계산
+const scoredPosts = allPosts
+  .filter((post) => post.slug !== currentSlug)
+  .map((post) => {
+    let score = 0;
+    // 동일 카테고리 가중치 +3점
+    if (post.data.category === currentCategory) {
+      score += 3;
+    }
+    // 공통 태그 가중치 각 +1점
+    const postTags = post.data.tags || [];
+    const sharedTags = postTags.filter((t: string) => currentTags.includes(t));
+    score += sharedTags.length;
+
+    return {
+      post,
+      score,
+      pubDate: post.data.pubDate.valueOf(),
+    };
+  })
+  .sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return b.pubDate - a.pubDate;
+  });
+
+const relatedPosts = scoredPosts.slice(0, limit).map((item) => item.post);
+---
+
+{relatedPosts.length > 0 && (
+  <section class="mt-14 pt-10 border-t border-slate-200/80">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+          <span>💡</span> 함께 읽으면 좋은 관련 추천 글
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          현재 주제와 연결된 실전 인사이트와 활용법을 계속해서 탐색해보세요.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {relatedPosts.map((post) => {
+        const formattedDate = new Intl.DateTimeFormat('ko-KR', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }).format(post.data.pubDate);
+
+        return (
+          <a
+            href={`/blog/${post.slug}/`}
+            class="group flex flex-col justify-between bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-blue-400/80 transition-all duration-200"
+          >
+            <!-- Dynamic SVG Thumbnail -->
+            <div class="aspect-[1200/630] bg-slate-900 border-b border-slate-100 overflow-hidden">
+              <img
+                src={`/og/${post.slug}.svg`}
+                alt={post.data.title}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            </div>
+
+            <div class="p-5 flex-1 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-3">
+                  <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 font-semibold rounded-full group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    {post.data.category}
+                  </span>
+                  <span>{post.data.readingTime || '5 min'}</span>
+                </div>
+
+              <h4 class="font-bold text-slate-900 text-base leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+                {post.data.title}
+              </h4>
+
+              <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                {post.data.description}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+              <span>{formattedDate}</span>
+              <span class="text-blue-600 font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                읽어보기 &rarr;
+              </span>
+            </div>
+          </div>
+        </a>
+      );
+    })}
+    </div>
+  </section>
+)}

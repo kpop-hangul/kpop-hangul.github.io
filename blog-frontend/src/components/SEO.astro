@@ -1,0 +1,155 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  article?: boolean;
+  pubDate?: Date;
+  updatedDate?: Date;
+  author?: string;
+  canonicalURL?: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  tags?: string[];
+  gaId?: string;
+  naverVerification?: string;
+}
+
+const {
+  title,
+  description,
+  image = '/images/default-hero.svg',
+  article = false,
+  pubDate,
+  updatedDate,
+  author = '앱시안 (absian)',
+  canonicalURL = Astro.url.href,
+  faqs,
+  tags = [],
+  gaId = import.meta.env.PUBLIC_GA_ID || '',
+  naverVerification = import.meta.env.PUBLIC_NAVER_VERIFICATION || 'ca222471eefa2cd5ee78b56c06323e07',
+} = Astro.props;
+
+const siteTitle = '앱시안(absian)';
+let formattedTitle = title;
+
+if (!title.includes('앱시안') && !title.includes('absian')) {
+  if (title.length + siteTitle.length + 3 <= 40) {
+    formattedTitle = `${title} | ${siteTitle}`;
+  } else {
+    formattedTitle = title;
+  }
+}
+
+const articleSlug = Astro.params.slug;
+const resolvedImage = (article && articleSlug && (image === '/images/default-hero.svg' || !image))
+  ? `/og/${articleSlug}.svg`
+  : image;
+
+const absoluteImageUrl = new URL(resolvedImage, Astro.site || 'https://absianp.github.io').href;
+const siteUrl = Astro.site?.href || 'https://absianp.github.io';
+
+// Structured Data: Article / BlogPosting
+const articleSchema = article ? {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  'headline': title,
+  'description': description,
+  'image': [absoluteImageUrl],
+  'datePublished': pubDate ? pubDate.toISOString() : new Date().toISOString(),
+  'dateModified': updatedDate ? updatedDate.toISOString() : (pubDate ? pubDate.toISOString() : new Date().toISOString()),
+  'author': {
+    '@type': 'Person',
+    'name': author,
+  },
+  'publisher': {
+    '@type': 'Organization',
+    'name': siteTitle,
+    'logo': {
+      '@type': 'ImageObject',
+      'url': new URL('/favicon.png', siteUrl).href,
+    },
+  },
+  'mainEntityOfPage': {
+    '@type': 'WebPage',
+    '@id': canonicalURL,
+  },
+  'keywords': tags.join(', '),
+} : null;
+
+// Structured Data: FAQPage (Great for Google Rich Snippets CTR)
+const faqSchema = (faqs && faqs.length > 0) ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  'mainEntity': faqs.map(faq => ({
+    '@type': 'Question',
+    'name': faq.question,
+    'acceptedAnswer': {
+      '@type': 'Answer',
+      'text': faq.answer,
+    },
+  })),
+} : null;
+---
+
+<!-- Global Metadata -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="canonical" href={canonicalURL} />
+<meta name="generator" content={Astro.generator} />
+
+<!-- Primary Meta Tags -->
+<title>{formattedTitle}</title>
+<meta name="title" content={formattedTitle} />
+<meta name="description" content={description} />
+{tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content={article ? 'article' : 'website'} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={formattedTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={absoluteImageUrl} />
+<meta property="og:site_name" content={siteTitle} />
+<meta property="og:locale" content="ko_KR" />
+{pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
+{updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
+{tags.map(tag => <meta property="article:tag" content={tag} />)}
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={canonicalURL} />
+<meta property="twitter:title" content={formattedTitle} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={absoluteImageUrl} />
+
+<!-- Google AdSense Official Script & Account Verification -->
+<meta name="google-adsense-account" content="ca-pub-3054784185688248" />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3054784185688248" crossorigin="anonymous"></script>
+
+<!-- Naver Search Advisor Verification -->
+{naverVerification && (
+  <meta name="naver-site-verification" content={naverVerification} />
+)}
+
+<!-- Google Analytics 4 (GA4) -->
+{gaId && (
+  <>
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script is:inline define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  </>
+)}
+
+<!-- JSON-LD Structured Data for High Google Search Visibility -->
+{articleSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+)}
+{faqSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+)}

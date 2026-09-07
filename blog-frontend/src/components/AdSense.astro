@@ -1,0 +1,58 @@
+---
+export interface Props {
+  slotId?: string;
+  type?: 'top-banner' | 'in-article' | 'bottom-banner' | 'sidebar' | 'multiplex';
+  format?: 'auto' | 'fluid' | 'rectangle';
+  className?: string;
+}
+
+const {
+  slotId = '1234567890',
+  type = 'in-article',
+  format = 'auto',
+  className = '',
+} = Astro.props;
+
+// 구글 애드센스 퍼블리셔 ID
+const publisherId = 'ca-pub-3054784185688248';
+const isDev = import.meta.env.DEV;
+
+// 슬롯 타입별 권장 높이 및 스타일 프리셋
+const typeStyles = {
+  'top-banner': 'min-h-[100px] my-6',
+  'in-article': 'min-h-[250px] my-8',
+  'bottom-banner': 'min-h-[280px] my-10',
+  'sidebar': 'min-h-[600px] w-full',
+  'multiplex': 'min-h-[300px] my-8',
+};
+---
+
+<div class={`ad-slot-container ${typeStyles[type]} ${className}`} data-ad-slot={slotId}>
+  <span class="ad-label">ADVERTISEMENT</span>
+  
+  {isDev ? (
+    <!-- 로컬 개발/프리뷰 모드 시 레이아웃 시프트(CLS) 방지용 플레이스홀더 -->
+    <div class="flex flex-col items-center justify-center p-6 bg-slate-200/50 rounded-lg text-slate-500 text-xs border border-dashed border-slate-300">
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <span class="font-semibold text-slate-700">Google AdSense Slot [{type}]</span>
+      </div>
+      <p class="text-[11px] text-slate-400">Client: {publisherId} | Slot: {slotId}</p>
+      <p class="text-[10px] text-slate-400 mt-1">(배포 후 실제 광고가 게재됩니다)</p>
+    </div>
+  ) : (
+    <!-- 실제 운영 배포 시 구글 애드센스 코드 -->
+    <ins class="adsbygoogle"
+         style="display:block; text-align:center;"
+         data-ad-layout={type === 'in-article' ? 'in-article' : undefined}
+         data-ad-format={format}
+         data-ad-client={publisherId}
+         data-ad-slot={slotId}
+         data-full-width-responsive="true"></ins>
+    <script is:inline>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  )}
+</div>

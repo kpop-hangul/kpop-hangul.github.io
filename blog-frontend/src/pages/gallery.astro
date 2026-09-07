@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ThumbnailCard from '../components/ThumbnailCard.astro';
+import AdSense from '../components/AdSense.astro';
+import { getCollection } from 'astro:content';
+import { getPostSummary } from '../utils/summary';
+import { getDynamicCategories } from '../utils/categories';
+import { getCategoryName, getCategorySlug } from '../utils/slug';
+
+const allPosts = await getCollection('blog', ({ data }) => {
+  return import.meta.env.PROD ? !data.draft : true;
+});
+
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const { allCategories } = await getDynamicCategories(100);
+const categories = ['전체', ...allCategories.map(c => c.name)];
+---
+
+<BaseLayout
+  title="썸네일 갤러리 모아보기 | 앱시안(absian)"
+  description="앱시안(absian)의 모든 테크 및 실전 자동화 가이드를 카드 썸네일 중심의 컴팩트 갤러리로 한눈에 빠르게 탐색해보세요."
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header Section -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold mb-3 border border-blue-100">
+        <span>🖼️ Visual Archive</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+        썸네일 갤러리 모아보기
+      </h1>
+      <p class="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
+        글의 핵심을 담은 카드 썸네일을 통해 {sortedPosts.length}개의 아티클을 한눈에 빠르고 직관적으로 둘러보세요.
+      </p>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-6" id="filter-buttons">
+        {categories.map((cat, idx) => (
+          <button
+            data-category={cat}
+            class={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
+              idx === 0
+                ? 'bg-blue-600 text-white shadow-xs filter-btn-active'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+            }`}
+          >
+            {cat === '전체' ? `전체 (${sortedPosts.length})` : cat}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <AdSense slotId="1234567890" type="top-banner" />
+
+    <!-- 4-Column Responsive Thumbnail Grid -->
+    <div
+      id="gallery-grid"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 my-10"
+    >
+      {sortedPosts.map(post => (
+        <div class="gallery-item" data-category={getCategoryName(getCategorySlug(post.data.category))}>
+          <ThumbnailCard
+            title={post.data.title}
+            summary={getPostSummary(post)}
+            description={post.data.description}
+            slug={post.slug}
+            category={post.data.category}
+            pubDate={post.data.pubDate}
+            readingTime={post.data.readingTime}
+            heroImage={post.data.heroImage}
+          />
+        </div>
+      ))}
+    </div>
+
+    <!-- Empty Filter Result Message -->
+    <div id="no-results" class="hidden text-center py-20 bg-white rounded-2xl border border-slate-200">
+      <p class="text-slate-500 text-sm">해당 카테고리의 글이 없습니다.</p>
+    </div>
+
+    <AdSense slotId="4567890123" type="bottom-banner" />
+  </div>
+
+  <!-- Realtime Filter Script -->
+  <script is:inline>
+    (function () {
+      const buttons = document.querySelectorAll('#filter-buttons button');
+      const items = document.querySelectorAll('.gallery-item');
+      const noResults = document.getElementById('no-results');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const selected = btn.getAttribute('data-category');
+
+          // Style active button
+          buttons.forEach((b) => {
+            b.classList.remove('bg-blue-600', 'text-white', 'shadow-xs', 'filter-btn-active');
+            b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200/80');
+          });
+          btn.classList.add('bg-blue-600', 'text-white', 'shadow-xs', 'filter-btn-active');
+          btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200/80');
+
+          // Filter items
+          let visibleCount = 0;
+          items.forEach((item) => {
+            const itemCat = item.getAttribute('data-category');
+            if (selected === '전체' || itemCat.includes(selected)) {
+              item.style.display = '';
+              visibleCount++;
+            } else {
+              item.style.display = 'none';
+            }
+          });
+
+          if (noResults) {
+            noResults.classList.toggle('hidden', visibleCount > 0);
+          }
+        });
+      });
+    })();
+  </script>
+</BaseLayout>
