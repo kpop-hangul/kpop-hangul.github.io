@@ -36,3 +36,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Responsive Prose Table Styling (Prevents Layout Shift and Mobile Overflow) */
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
+}
+
+.prose table th,
+.prose table td {
+  white-space: nowrap;
+}
+

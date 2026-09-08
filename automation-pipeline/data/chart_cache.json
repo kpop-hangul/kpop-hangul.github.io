@@ -1,29 +1,29 @@
 [
   {
-    "rank": 1,
-    "chartSource": "Melon Top 100",
-    "artist": "RESCENE (리센느)",
-    "title": "LOVE ATTACK",
-    "album": "SCENEDROME",
-    "genre": "Dance & Pop",
-    "difficulty": "Beginner"
+    "rank": 2,
+    "chartSource": "Spotify Daily Top",
+    "artist": "CORTIS",
+    "title": "REDRED",
+    "album": "",
+    "genre": "Hip-Hop & Rap",
+    "difficulty": "Advanced"
   },
   {
-    "rank": 1,
-    "chartSource": "Spotify Daily Top",
-    "artist": "BIG Naughty",
-    "title": "Nostalgia",
-    "album": "",
-    "genre": "R&B & Soul",
+    "rank": 3,
+    "chartSource": "Melon Top 100",
+    "artist": "아이오아이 (I.O.I)",
+    "title": "갑자기",
+    "album": "I.O.I 3rd MINI ALBUM [I.O.I : LOOP]",
+    "genre": "Dance & Pop",
     "difficulty": "Intermediate"
   },
   {
-    "rank": 2,
-    "chartSource": "Melon Top 100",
-    "artist": "BIGBANG (빅뱅)",
-    "title": "BiiiG",
-    "album": "BiiiG",
-    "genre": "Hip-Hop & Rap",
-    "difficulty": "Advanced"
+    "rank": 4,
+    "chartSource": "Spotify Daily Top",
+    "artist": "Jung Kook",
+    "title": "Seven (w/ Latto)",
+    "album": "",
+    "genre": "Dance & Pop",
+    "difficulty": "Intermediate"
   }
 ]

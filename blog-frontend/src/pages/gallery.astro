@@ -1,84 +1,104 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ThumbnailCard from '../components/ThumbnailCard.astro';
-import AdSense from '../components/AdSense.astro';
+import Card from '../components/Card.astro';
 import { getCollection } from 'astro:content';
-import { getPostSummary } from '../utils/summary';
-import { getDynamicCategories } from '../utils/categories';
-import { getCategoryName, getCategorySlug } from '../utils/slug';
+import { getDifficultyStats, getGenreStats } from '../utils/kpop';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const allPosts = await getCollection('blog', ({ data }) => {
   return import.meta.env.PROD ? !data.draft : true;
 });
 
 const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const { allCategories } = await getDynamicCategories(100);
-const categories = ['전체', ...allCategories.map(c => c.name)];
+const difficulties = await getDifficultyStats();
+const genres = await getGenreStats();
+
+// Available filter presets
+const filterOptions = [
+  { label: 'All Songs', value: 'all' },
+  { label: '🟢 Beginner', value: 'Beginner' },
+  { label: '🟡 Intermediate', value: 'Intermediate' },
+  { label: '🔴 Advanced', value: 'Advanced' },
+  ...genres.map(g => ({ label: g.name, value: g.name }))
+];
 ---
 
 <BaseLayout
-  title="썸네일 갤러리 모아보기 | 앱시안(absian)"
-  description="앱시안(absian)의 모든 테크 및 실전 자동화 가이드를 카드 썸네일 중심의 컴팩트 갤러리로 한눈에 빠르게 탐색해보세요."
+  title="Visual Song Archive | K-Pop Hangul"
+  description="Explore all chart-topping K-Pop song lessons by difficulty level, genre, and artist in a visual card gallery."
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <!-- Header Section -->
     <div class="text-center max-w-3xl mx-auto mb-10">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold mb-3 border border-blue-100">
-        <span>🖼️ Visual Archive</span>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-3 border border-indigo-100">
+        <span>🖼️ Visual Song Archive</span>
       </div>
       <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-        썸네일 갤러리 모아보기
+        Explore K-Pop Korean Lessons
       </h1>
       <p class="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
-        글의 핵심을 담은 카드 썸네일을 통해 {sortedPosts.length}개의 아티클을 한눈에 빠르고 직관적으로 둘러보세요.
+        Browse {sortedPosts.length} top-charting Melon & Spotify songs broken down into structured Korean learning modules.
       </p>
 
-      <!-- Category Filter Pills -->
+      <!-- Filter Buttons -->
       <div class="flex flex-wrap items-center justify-center gap-2 mt-6" id="filter-buttons">
-        {categories.map((cat, idx) => (
+        {filterOptions.map((opt, idx) => (
           <button
-            data-category={cat}
+            data-filter={opt.value}
             class={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
               idx === 0
-                ? 'bg-blue-600 text-white shadow-xs filter-btn-active'
+                ? 'bg-indigo-600 text-white shadow-xs filter-btn-active'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
             }`}
           >
-            {cat === '전체' ? `전체 (${sortedPosts.length})` : cat}
+            {opt.label} {opt.value === 'all' ? `(${sortedPosts.length})` : ''}
           </button>
         ))}
       </div>
     </div>
 
-    <AdSense slotId="1234567890" type="top-banner" />
-
-    <!-- 4-Column Responsive Thumbnail Grid -->
+    <!-- Responsive Card Grid -->
     <div
       id="gallery-grid"
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 my-10"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-10"
     >
-      {sortedPosts.map(post => (
-        <div class="gallery-item" data-category={getCategoryName(getCategorySlug(post.data.category))}>
-          <ThumbnailCard
-            title={post.data.title}
-            summary={getPostSummary(post)}
-            description={post.data.description}
-            slug={post.slug}
-            category={post.data.category}
-            pubDate={post.data.pubDate}
-            readingTime={post.data.readingTime}
-            heroImage={post.data.heroImage}
-          />
-        </div>
-      ))}
+      {sortedPosts.map(post => {
+        const diff = post.data.difficulty || 'Beginner';
+        const genre = post.data.genre || 'Dance & Pop';
+        const artist = post.data.artist || '';
+        return (
+          <div
+            class="gallery-item transition-all"
+            data-difficulty={diff}
+            data-genre={genre}
+            data-artist={artist}
+          >
+            <Card
+              title={post.data.title}
+              description={post.data.description}
+              slug={post.slug}
+              pubDate={post.data.pubDate}
+              readingTime={post.data.readingTime}
+              difficulty={post.data.difficulty}
+              genre={post.data.genre}
+              artist={post.data.artist}
+              songTitle={post.data.songTitle}
+              hangulTitle={post.data.hangulTitle}
+              chartRank={post.data.chartRank}
+              chartSource={post.data.chartSource}
+            />
+          </div>
+        );
+      })}
     </div>
 
     <!-- Empty Filter Result Message -->
-    <div id="no-results" class="hidden text-center py-20 bg-white rounded-2xl border border-slate-200">
-      <p class="text-slate-500 text-sm">해당 카테고리의 글이 없습니다.</p>
+    <div id="no-results" class="hidden text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
+      <div class="text-4xl mb-3">🔍</div>
+      <p class="text-slate-700 font-semibold text-base mb-1">No songs found in this category yet.</p>
+      <p class="text-slate-400 text-xs">Try selecting another difficulty level or music genre above.</p>
     </div>
-
-    <AdSense slotId="4567890123" type="bottom-banner" />
   </div>
 
   <!-- Realtime Filter Script -->
@@ -90,21 +110,23 @@ const categories = ['전체', ...allCategories.map(c => c.name)];
 
       buttons.forEach((btn) => {
         btn.addEventListener('click', () => {
-          const selected = btn.getAttribute('data-category');
+          const selected = btn.getAttribute('data-filter');
 
-          // Style active button
+          // Update active button classes
           buttons.forEach((b) => {
-            b.classList.remove('bg-blue-600', 'text-white', 'shadow-xs', 'filter-btn-active');
+            b.classList.remove('bg-indigo-600', 'text-white', 'shadow-xs', 'filter-btn-active');
             b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200/80');
           });
-          btn.classList.add('bg-blue-600', 'text-white', 'shadow-xs', 'filter-btn-active');
+          btn.classList.add('bg-indigo-600', 'text-white', 'shadow-xs', 'filter-btn-active');
           btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200/80');
 
-          // Filter items
+          // Filter grid items
           let visibleCount = 0;
           items.forEach((item) => {
-            const itemCat = item.getAttribute('data-category');
-            if (selected === '전체' || itemCat.includes(selected)) {
+            const itemDiff = item.getAttribute('data-difficulty') || '';
+            const itemGenre = item.getAttribute('data-genre') || '';
+
+            if (selected === 'all' || itemDiff.includes(selected) || itemGenre.includes(selected)) {
               item.style.display = '';
               visibleCount++;
             } else {
@@ -120,3 +142,4 @@ const categories = ['전체', ...allCategories.map(c => c.name)];
     })();
   </script>
 </BaseLayout>
+

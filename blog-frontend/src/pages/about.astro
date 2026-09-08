@@ -1,45 +1,159 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import siteConfig from '../config/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <BaseLayout
-  title="블로그 소개 (About Us)"
-  description="앱시안(absian) AI & 테크 인사이트 블로그의 운영 목적, 편집 기준 및 소개입니다."
+  title="About Us | K-Pop Hangul"
+  description="Learn about K-Pop Hangul's educational mission to teach the Korean language through chart-topping K-Pop songs from Melon and Spotify."
 >
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200/80 shadow-sm prose prose-slate max-w-none">
-      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-6">About 앱시안(absian) AI & 테크 인사이트</h1>
-
-      <p class="lead text-lg text-slate-600">
-        <strong>앱시안(absian) AI & 테크 인사이트</strong>는 급변하는 인공지능(AI) 시대에 개인과 개발자가 생산성을 극대화하고 새로운 디지털 기회를 포착할 수 있도록 실용적이고 신뢰할 수 있는 정보를 제공하는 테크 전문 미디어입니다.
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <!-- Hero Header -->
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-semibold mb-4">
+        <span>🎵 The Ultimate K-Pop Korean Learning Hub</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+        Sing, Learn & Master <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">Hangul</span>
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+        We transform the songs you already love into structured, practical Korean lessons. Real lyrics, authentic pronunciation, and everyday grammar formulas.
       </p>
+    </div>
 
-      <h2>💡 우리의 미션 (Mission)</h2>
-      <p>
-        복잡하고 어려운 최신 기술 트렌드를 누구나 쉽게 이해하고 바로 실무나 부업에 적용할 수 있는 형태로 재구성합니다. 단순한 뉴스 나열을 넘어 직접 테스트하고 검증한 실전 가이드와 튜토리얼을 지향합니다.
-      </p>
+    <div class="space-y-12 bg-white p-8 sm:p-12 rounded-3xl border border-slate-200/80 shadow-sm">
+      <!-- Section 1: Our Mission -->
+      <section>
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-base">🎯</span>
+          Our Mission
+        </h2>
+        <p class="text-slate-600 text-base leading-relaxed mb-4">
+          Traditional language textbooks often teach outdated phrases like "Where is the post office?" that learners rarely use. Meanwhile, K-Pop connects millions of global fans to modern, emotional, and colloquial Korean.
+        </p>
+        <p class="text-slate-600 text-base leading-relaxed">
+          <strong>{siteConfig.site.shortName}</strong> was founded to bridge the gap between K-Pop fandom and genuine language acquisition. Every single day, we monitor real-time chart data from Korea's top music platforms—<strong>Melon Top 100</strong> and <strong>Spotify Daily Charts</strong>—and publish in-depth, pedagogical lessons based on the hottest trending tracks.
+        </p>
+      </section>
 
-      <h2>🎯 주요 다루는 분야</h2>
-      <ul>
-        <li><strong>AI & 생산성</strong>: ChatGPT, Claude, 미드저니, 로컬 LLM 등 최신 생성형 AI 실무 활용법 및 프롬프트 가이드</li>
-        <li><strong>개발 & 테크</strong>: 파이썬 자동화 스크립트, 웹 기술, 클라우드 프리티어 활용, 깃허브 실전 팁</li>
-        <li><strong>스마트 부업 & 재테크</strong>: 노코드 툴을 활용한 디지털 부업 구조화, 블로그 및 웹사이트 수익화 전략</li>
-      </ul>
+      <!-- Section 2: Why K-Pop Works -->
+      <section class="border-t border-slate-100 pt-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-base">✨</span>
+          Why K-Pop is the Best Classroom
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-2xl mb-2">🔁</div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Repetitive Hooks</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Catchy choruses stick in your memory effortlessly. When you memorize a hook, you permanently memorize its vocabulary and grammar patterns.
+            </p>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-2xl mb-2">🗣️</div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Authentic Pronunciation</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Singing along to Korean idols naturally trains your tongue to master liaisons, tense consonants, and natural intonation without robotic drills.
+            </p>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-2xl mb-2">💬</div>
+            <h3 class="font-bold text-slate-900 text-sm mb-1">Modern Slang & Emotion</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Lyrics are written by Korea's sharpest lyricists, giving you instant access to how modern Koreans actually speak and express affection.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <h2>✍️ 콘텐츠 품질 및 편집 원칙 (Editorial Guidelines)</h2>
-      <p>
-        앱시안(absian)는 정보의 정확성과 가독성을 최우선으로 합니다.
-      </p>
-      <ul>
-        <li><strong>직접 검증</strong>: 다루는 툴과 코드는 사전에 직접 테스트하여 실행 가능성을 확인합니다.</li>
-        <li><strong>단계별 안내</strong>: 초보자도 따라 할 수 있도록 체계적인 목차와 예시를 포함합니다.</li>
-        <li><strong>정기적 업데이트</strong>: 기술 변경 사항을 반영하여 정기적으로 아티클을 갱신합니다.</li>
-      </ul>
+      <!-- Section 3: Anatomy of Every Lesson -->
+      <section class="border-t border-slate-100 pt-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center text-base">📚</span>
+          The Anatomy of Every K-Pop Lesson
+        </h2>
+        <p class="text-slate-600 text-sm mb-6">
+          Every daily lesson on {siteConfig.site.shortName} follows a strict pedagogical framework crafted for non-native speakers:
+        </p>
+        <ul class="space-y-4">
+          <li class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
+            <div>
+              <strong class="text-slate-900 text-sm">Key Chorus Breakdown (3-Line Method):</strong>
+              <p class="text-xs text-slate-600 mt-0.5">Original Korean Hangul lyrics, standard Revised Romanization for phonetic guide, and natural English meaning.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
+            <div>
+              <strong class="text-slate-900 text-sm">Essential Vocabulary Table:</strong>
+              <p class="text-xs text-slate-600 mt-0.5">Core words with root forms, parts of speech, English translations, and sample sentence applications.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
+            <div>
+              <strong class="text-slate-900 text-sm">Grammar Deep Dive & Formulas:</strong>
+              <p class="text-xs text-slate-600 mt-0.5">Clear mathematical grammar formulas (e.g., [Verb Stem] + ~고 싶다) plus 2 practical, everyday conversational examples.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
+            <div>
+              <strong class="text-slate-900 text-sm">Pronunciation & Batchim Rules:</strong>
+              <p class="text-xs text-slate-600 mt-0.5">Phonetic sound changes, nasalization, and liaison explanations so you sound like a native speaker.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">5</div>
+            <div>
+              <strong class="text-slate-900 text-sm">Interactive Quiz & Active Recall:</strong>
+              <p class="text-xs text-slate-600 mt-0.5">Self-testing questions with expandable answer reveals to test your retention on the spot.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
 
-      <h2>📬 문의 및 협업</h2>
-      <p>
-        피드백, 정정 요청, 콘텐츠 제휴 등은 언제든지 <a href="/contact" class="text-blue-600 font-semibold underline">문의 페이지</a>를 통해 남겨주시기 바랍니다.
-      </p>
+      <!-- Section 4: 3-Dimensional Categorization -->
+      <section class="border-t border-slate-100 pt-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-base">🧭</span>
+          3 Ways to Browse & Learn
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+          <div class="border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 transition-colors">
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider block mb-2">Dimension 1</span>
+            <h3 class="font-bold text-slate-900 text-base mb-1">By Korean Level</h3>
+            <p class="text-xs text-slate-600 mb-3">Beginner (Level 1), Intermediate (Level 2), and Advanced (Level 3) based on linguistic complexity.</p>
+            <a href={`${base}/difficulty/`} class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Explore Levels →</a>
+          </div>
+          <div class="border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 transition-colors">
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider block mb-2">Dimension 2</span>
+            <h3 class="font-bold text-slate-900 text-base mb-1">By Music Genre</h3>
+            <p class="text-xs text-slate-600 mb-3">Dance & Pop, R&B & Soul, Hip-Hop & Rap, and Ballad & OST tracks from fast bars to lyrical poetry.</p>
+            <a href={`${base}/genres/`} class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Browse Genres →</a>
+          </div>
+          <div class="border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 transition-colors">
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider block mb-2">Dimension 3</span>
+            <h3 class="font-bold text-slate-900 text-base mb-1">By Artist Directory</h3>
+            <p class="text-xs text-slate-600 mb-3">Search your favorite idols and bands—from NewJeans and BTS to aespa and BIG Naughty.</p>
+            <a href={`${base}/artists/`} class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">View Artists →</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Fair Use & Copyright -->
+      <section class="border-t border-slate-100 pt-8 bg-slate-50 -mx-8 -mb-12 p-8 sm:p-12 rounded-b-3xl">
+        <h3 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-1.5">
+          <span>⚖️</span> Fair Use & Educational Disclaimer
+        </h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          {siteConfig.site.shortName} is a non-commercial educational resource dedicated to Korean language acquisition. All original song lyrics, titles, and artist names belong to their respective copyright holders, songwriters, and entertainment agencies. Song excerpts are analyzed under Fair Use doctrine for non-profit pedagogical commentary, translation, and grammatical dissection.
+        </p>
+      </section>
     </div>
   </div>
 </BaseLayout>

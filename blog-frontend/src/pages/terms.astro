@@ -1,35 +1,47 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import siteConfig from '../config/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <BaseLayout
-  title="이용약관 (Terms of Service)"
-  description="앱시안(absian) AI & 테크 인사이트 웹사이트 이용약관 및 면책 조항 안내입니다."
+  title="Terms of Service & Fair Use | K-Pop Hangul"
+  description="Terms of Service, educational copyright disclaimer, and Fair Use statement for K-Pop Hangul."
 >
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200/80 shadow-sm prose prose-slate max-w-none text-sm leading-relaxed">
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-4">이용약관 (Terms of Service)</h1>
-      <p class="text-slate-500 text-xs mb-8">최종 수정일: 2026년 8월 29일</p>
+    <div class="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200/80 shadow-sm prose prose-slate max-w-none text-sm leading-relaxed">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Terms of Service & Fair Use</h1>
+      <p class="text-slate-400 text-xs mb-8">Last Updated: September 2026</p>
 
-      <h2>1. 총칙</h2>
+      <h2>1. Educational Mission & Fair Use Notice</h2>
       <p>
-        본 이용약관은 <strong>앱시안(absian) AI & 테크 인사이트</strong>(이하 "사이트")가 제공하는 모든 정보 및 서비스의 이용 조건과 절차에 관한 기본 사항을 규정합니다.
+        <strong>{siteConfig.site.name}</strong> is a non-profit educational and linguistic resource designed specifically to help international language learners study Korean through contemporary music culture.
+      </p>
+      <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl my-4 text-xs text-indigo-900 leading-relaxed">
+        <strong>Fair Use Doctrine:</strong> Song lyrics reproduced on this site are limited excerpts (typically chorus hooks or selected verses) presented strictly for the transformative purposes of educational commentary, linguistic critique, grammatical dissection, Romanization instruction, and English translation. All copyrights in the underlying musical compositions, audio recordings, and original Korean lyrics remain the exclusive property of their respective lyricists, composers, performers, and recording labels.
+      </div>
+
+      <h2>2. Intellectual Property Rights</h2>
+      <p>
+        All original educational materials produced by K-Pop Hangul—including grammatical breakdown formulas, custom vocabulary glossaries, phonological sound change guides, and practice quizzes—are protected under international copyright. You may freely use, share, and link to our educational resources for personal, non-commercial language study with appropriate attribution.
       </p>
 
-      <h2>2. 지적 재산권 (저작권)</h2>
+      <h2>3. Linguistic Accuracy & Disclaimer</h2>
       <p>
-        본 사이트에 게시된 모든 글, 이미지, 디자인 및 코드 등의 저작권은 사이트 운영자에게 있으며, 사전 동의 없는 무단 전재, 복제, 배포를 금합니다. 단, 비영리적 목적의 출처 표기 링크 공유는 허용됩니다.
+        While our editorial staff and linguistic models take meticulous care to provide precise Revised Romanization and idiomatic translations, poetic lyricism often contains metaphorical nuance, slang, or artistic license. The educational content is provided "as is" without warranty of any kind.
       </p>
 
-      <h2>3. 정보의 신뢰성 및 면책 조항 (Disclaimer)</h2>
+      <h2>4. External Platform Links & Trademarks</h2>
       <p>
-        본 사이트의 콘텐츠는 정보 제공 및 교육 목적만을 위해 작성되었습니다. 운영자는 게시된 정보의 완전성, 정확성, 최신성에 대해 최선을 다하지만 법적 책임을 지지 않습니다. 기술 적용이나 투자/부업에 따른 최종 책임은 이용자 본인에게 있습니다.
+        References to third-party services—including Melon, Spotify, YouTube, Apple Music, or specific entertainment agencies—are made purely for identification, citation, and chart attribution purposes. All trademarks are the property of their respective owners.
       </p>
 
-      <h2>4. 외부 링크</h2>
+      <h2>5. Removal Requests</h2>
       <p>
-        본 사이트는 제3자 웹사이트로의 링크를 포함할 수 있습니다. 링크된 외부 사이트의 콘텐츠나 개인정보 정책에 대해서는 책임을 지지 않습니다.
+        If you are a copyright holder or authorized representative of any artist featured on this platform and have concerns regarding lyric citation, please contact our editorial team via our <a href={`${base}/contact/`} class="text-indigo-600 underline font-medium">Contact Form</a>. We will promptly review and address all legitimate inquiries.
       </p>
     </div>
   </div>
 </BaseLayout>
+

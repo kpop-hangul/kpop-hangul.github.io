@@ -10,7 +10,7 @@ export async function getStaticPaths() {
     return import.meta.env.PROD ? !data.draft : true;
   });
 
-  const knownCategories = ['ai-productivity', 'tech-dev', 'side-income'];
+  const knownCategories = ['beginner', 'intermediate', 'advanced', 'dance-pop', 'rnb-soul', 'hip-hop', 'ballad-ost'];
   const postCategories = allPosts.map(p => getCategorySlug(p.data.category));
   const uniqueCategorySlugs = [...new Set([...knownCategories, ...postCategories])];
 
@@ -36,14 +36,14 @@ const { categorySlug, categoryName, posts } = Astro.props;
 ---
 
 <BaseLayout
-  title={`${categoryName} 아티클 모음`}
-  description={`${categoryName} 카테고리에 등록된 유용한 가이드와 실전 팁 모음입니다.`}
+  title={`${categoryName} Lessons | K-Pop Hangul`}
+  description={`Browse all Korean language learning lessons and song breakdowns for ${categoryName}.`}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-10">
-      <div class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">카테고리</div>
-      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">{categoryName}</h1>
-      <p class="text-slate-600 text-sm mt-2">총 {posts.length}개의 아티클이 등록되어 있습니다.</p>
+      <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Category & Tier</div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{categoryName}</h1>
+      <p class="text-slate-600 text-sm mt-2">Found {posts.length} {posts.length === 1 ? 'song lesson' : 'song lessons'} in this category.</p>
     </div>
 
     <AdSense slotId="1234567890" type="top-banner" />
@@ -58,14 +58,21 @@ const { categorySlug, categoryName, posts } = Astro.props;
             slug={post.slug}
             category={post.data.category}
             readingTime={post.data.readingTime}
-            heroImage={post.data.heroImage}
-            tags={post.data.tags}
+            difficulty={post.data.difficulty}
+            genre={post.data.genre}
+            artist={post.data.artist}
+            songTitle={post.data.songTitle}
+            hangulTitle={post.data.hangulTitle}
+            chartRank={post.data.chartRank}
+            chartSource={post.data.chartSource}
           />
         ))}
       </div>
     ) : (
-      <div class="text-center py-16 bg-white rounded-2xl border border-slate-200">
-        <p class="text-slate-500 text-sm">해당 카테고리에 등록된 포스트가 아직 없습니다.</p>
+      <div class="text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div class="text-4xl mb-2">🎵</div>
+        <p class="text-slate-700 font-bold text-base mb-1">No songs in this category yet</p>
+        <p class="text-slate-400 text-xs">New lessons are generated daily from Melon & Spotify top charts!</p>
       </div>
     )}
 

@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SEO from '../components/SEO.astro';
+import siteConfig from '../config/site';
 import '../styles/global.css';
 
 export interface Props {
@@ -19,12 +20,12 @@ export interface Props {
 
 const {
   title,
-  description = 'AI 생산성 도구, 개발 팁, 스마트 부업 및 테크 트렌드 전문 블로그',
+  description = siteConfig.site.description || 'Learn Korean vocabulary, grammar, and pronunciation through top charting K-Pop song lyrics from Melon and Spotify.',
   image,
   article,
   pubDate,
   updatedDate,
-  author,
+  author = siteConfig.site.author || 'K-Pop Hangul Team',
   canonicalURL,
   faqs,
   tags,
@@ -32,7 +33,7 @@ const {
 ---
 
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
     <SEO
       title={title}
@@ -46,8 +47,11 @@ const {
       faqs={faqs}
       tags={tags}
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   </head>
-  <body class="flex flex-col min-h-screen bg-slate-50 text-slate-900">
+  <body class="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500 selection:text-white">
     <Header />
     <main class="flex-grow">
       <slot />

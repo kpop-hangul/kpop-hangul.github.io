@@ -4,26 +4,10 @@ import AdSense from '../components/AdSense.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import RelatedPosts from '../components/RelatedPosts.astro';
 import { getDifficultySlug, getGenreSlug, getArtistSlug, getDifficultyName } from '../utils/slug';
+import type { CollectionEntry } from 'astro:content';
 
 export interface Props {
-  frontmatter: {
-    title: string;
-    description: string;
-    pubDate: Date;
-    updatedDate?: Date;
-    category?: string;
-    difficulty?: string;
-    genre?: string;
-    artist?: string;
-    songTitle?: string;
-    hangulTitle?: string;
-    chartRank?: number;
-    chartSource?: string;
-    tags?: string[];
-    author?: string;
-    readingTime?: string;
-    faqs?: Array<{ question: string; answer: string }>;
-  };
+  frontmatter: CollectionEntry<'blog'>['data'];
   headings: Array<{ depth: number; slug: string; text: string }>;
   prevPost?: { title: string; slug: string; category?: string } | null;
   nextPost?: { title: string; slug: string; category?: string } | null;
@@ -166,8 +150,14 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
     <TableOfContents headings={headings} />
 
     <!-- Article Markdown Content -->
-    <div class="prose prose-slate prose-indigo prose-lg max-w-none bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs leading-relaxed">
+    <div id="article-content" class="prose prose-slate prose-indigo prose-lg max-w-none bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs leading-relaxed">
       <slot />
+    </div>
+
+    <!-- Toast Notification for Micro-interactions -->
+    <div id="lessonToast" class="fixed bottom-12 sm:bottom-6 right-6 z-50 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none bg-slate-950 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2.5 border border-slate-800">
+      <span id="toastIcon" class="text-base">📋</span>
+      <span id="toastMsg">Copied to clipboard!</span>
     </div>
 
     <!-- Mid/In-Article AdSense Slot -->
@@ -218,4 +208,284 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
     <!-- Bottom AdSense Slot -->
     <AdSense slotId="4567890123" type="bottom-banner" />
   </div>
+
+  <!-- Interactive Pedagogical Script: Web TTS, Robust Lyric Copy & Flashcard Recall -->
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const article = document.getElementById('article-content');
+      if (!article) return;
+
+      const toast = document.getElementById('lessonToast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      function showToast(msg, icon = '📋') {
+        if (!toast) return;
+        toastMsg.textContent = msg;
+        toastIcon.textContent = icon;
+        toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+          toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+        }, 3000);
+      }
+
+      function speakKorean(text, btnElement) {
+        if (!('speechSynthesis' in window)) {
+          alert('SpeechSynthesis is not supported in this browser.');
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.85; // Slightly slower for language learners
+        utterance.pitch = 1.0;
+
+        if (btnElement) {
+          btnElement.classList.add('ring-2', 'ring-indigo-500', 'scale-110');
+          utterance.onend = () => btnElement.classList.remove('ring-2', 'ring-indigo-500', 'scale-110');
+          utterance.onerror = () => btnElement.classList.remove('ring-2', 'ring-indigo-500', 'scale-110');
+        }
+        window.speechSynthesis.speak(utterance);
+      }
+
+      // 1. Wrap all Markdown tables in responsive container and enhance with Flashcard Active Recall
+      const tables = article.querySelectorAll('table');
+      tables.forEach(table => {
+        // Ensure responsive wrapper to prevent mobile overflow
+        if (!table.parentElement.classList.contains('overflow-x-auto')) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'overflow-x-auto w-full my-6 rounded-2xl border border-slate-200 shadow-2xs';
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
+        }
+
+        const headerRow = table.querySelector('thead tr') || table.querySelector('tr');
+        if (!headerRow) return;
+
+        const headers = Array.from(headerRow.querySelectorAll('th, td')).map(cell => cell.textContent.trim().toLowerCase());
+        const hangulColIdx = headers.findIndex(h => h.includes('hangul'));
+        const romanColIdx = headers.findIndex(h => h.includes('roman'));
+        const englishColIdx = headers.findIndex(h => h.includes('english') || h.includes('meaning'));
+
+        if (hangulColIdx !== -1) {
+          // Add TTS button to each Hangul cell in table body
+          const rows = table.querySelectorAll('tbody tr');
+          rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells[hangulColIdx]) {
+              const hangulCell = cells[hangulColIdx];
+              const wordText = hangulCell.textContent.trim();
+
+              const miniTts = document.createElement('button');
+              miniTts.type = 'button';
+              miniTts.className = 'ml-1.5 p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer text-xs inline-block';
+              miniTts.title = `Pronounce ${wordText}`;
+              miniTts.innerHTML = '🔊';
+              miniTts.addEventListener('click', (e) => {
+                e.stopPropagation();
+                speakKorean(wordText, miniTts);
+              });
+              hangulCell.appendChild(miniTts);
+            }
+          });
+        }
+
+        // Insert Flashcard Recall Action Bar above table
+        if (englishColIdx !== -1 || romanColIdx !== -1) {
+          const bar = document.createElement('div');
+          bar.className = 'flex flex-wrap items-center justify-between gap-3 p-3.5 mb-2 bg-gradient-to-r from-indigo-50 to-purple-50/60 border border-indigo-100 rounded-2xl text-xs text-indigo-950 shadow-2xs';
+          bar.innerHTML = `
+            <div class="flex items-center gap-2 font-bold">
+              <span class="text-base">🎴</span>
+              <span>Flashcard Active Recall:</span>
+              <span class="font-normal text-indigo-700 hidden md:inline">Tap hidden cells to test your memory</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="toggleEnglishBtn" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-2xs cursor-pointer">
+                Hide English
+              </button>
+              <button type="button" id="toggleRomanBtn" class="px-2.5 py-1 rounded-lg bg-white text-slate-700 font-semibold hover:bg-slate-100 transition-colors border border-slate-200 cursor-pointer">
+                Hide Romanization
+              </button>
+              <button type="button" id="exportAnkiBtn" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer">
+                📥 Anki CSV
+              </button>
+            </div>
+          `;
+
+          const wrapper = table.parentElement;
+          wrapper.parentNode.insertBefore(bar, wrapper);
+
+          const engBtn = bar.querySelector('#toggleEnglishBtn');
+          const romBtn = bar.querySelector('#toggleRomanBtn');
+          const ankiBtn = bar.querySelector('#exportAnkiBtn');
+
+          let hideEnglish = false;
+          let hideRoman = false;
+
+          // Toggle English Blur
+          engBtn.addEventListener('click', () => {
+            hideEnglish = !hideEnglish;
+            engBtn.classList.toggle('bg-indigo-600', !hideEnglish);
+            engBtn.classList.toggle('bg-pink-600', hideEnglish);
+            engBtn.textContent = hideEnglish ? 'English Hidden (Tap)' : 'Hide English';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+              const cells = row.querySelectorAll('td');
+              if (cells[englishColIdx]) {
+                const cell = cells[englishColIdx];
+                if (hideEnglish) {
+                  cell.classList.add('filter', 'blur-sm', 'cursor-pointer', 'select-none', 'hover:blur-none', 'transition-all');
+                  cell.title = 'Click to reveal English';
+                  cell.setAttribute('aria-hidden', 'true');
+                  cell.setAttribute('role', 'button');
+                  cell.setAttribute('tabindex', '0');
+                  cell.onclick = () => {
+                    const isBlurred = cell.classList.toggle('blur-sm');
+                    cell.setAttribute('aria-hidden', isBlurred ? 'true' : 'false');
+                  };
+                } else {
+                  cell.classList.remove('filter', 'blur-sm', 'cursor-pointer', 'select-none', 'hover:blur-none');
+                  cell.title = '';
+                  cell.removeAttribute('aria-hidden');
+                  cell.removeAttribute('role');
+                  cell.removeAttribute('tabindex');
+                  cell.onclick = null;
+                }
+              }
+            });
+            if (hideEnglish) showToast('English hidden! Tap cells to reveal.', '🎴');
+          });
+
+          // Toggle Romanization Blur
+          if (romanColIdx !== -1) {
+            romBtn.addEventListener('click', () => {
+              hideRoman = !hideRoman;
+              romBtn.classList.toggle('bg-purple-600', hideRoman);
+              romBtn.classList.toggle('text-white', hideRoman);
+              romBtn.textContent = hideRoman ? 'Romanization Hidden (Hangul Only)' : 'Hide Romanization';
+
+              const rows = table.querySelectorAll('tbody tr');
+              rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells[romanColIdx]) {
+                  const cell = cells[romanColIdx];
+                  if (hideRoman) {
+                    cell.classList.add('filter', 'blur-sm', 'cursor-pointer', 'select-none', 'hover:blur-none', 'transition-all');
+                    cell.title = 'Click to reveal Romanization';
+                    cell.setAttribute('aria-hidden', 'true');
+                    cell.setAttribute('role', 'button');
+                    cell.setAttribute('tabindex', '0');
+                    cell.onclick = () => {
+                      const isBlurred = cell.classList.toggle('blur-sm');
+                      cell.setAttribute('aria-hidden', isBlurred ? 'true' : 'false');
+                    };
+                  } else {
+                    cell.classList.remove('filter', 'blur-sm', 'cursor-pointer', 'select-none', 'hover:blur-none');
+                    cell.title = '';
+                    cell.removeAttribute('aria-hidden');
+                    cell.removeAttribute('role');
+                    cell.removeAttribute('tabindex');
+                    cell.onclick = null;
+                  }
+                }
+              });
+              if (hideRoman) showToast('Romanization hidden! Practice reading pure Hangul.', '✨');
+            });
+          } else {
+            romBtn.classList.add('hidden');
+          }
+
+          // Export Table to Anki CSV
+          ankiBtn.addEventListener('click', () => {
+            const rows = table.querySelectorAll('tbody tr');
+            let csvContent = 'Hangul\tRomanization\tEnglish\tExample\n';
+            rows.forEach(row => {
+              const cells = Array.from(row.querySelectorAll('td')).map(c => {
+                // clone to remove any TTS buttons
+                const clone = c.cloneNode(true);
+                clone.querySelectorAll('button').forEach(b => b.remove());
+                return clone.textContent.trim().replace(/\t/g, ' ');
+              });
+              if (cells.length >= 3) {
+                csvContent += `${cells[hangulColIdx] || ''}\t${cells[romanColIdx] || ''}\t${cells[englishColIdx] || ''}\t${cells[4] || ''}\n`;
+              }
+            });
+
+            navigator.clipboard.writeText(csvContent).then(() => {
+              showToast('Vocabulary copied in Anki Tab-delimited format!', '📥');
+            });
+          });
+        }
+      });
+
+      // 2. Enhance Section 2: 3-Line Chorus Breakdown with Scope-based Traversal
+      const listItems = article.querySelectorAll('li');
+      listItems.forEach(li => {
+        const text = li.textContent.trim();
+        if (text.startsWith('Hangul:')) {
+          const hangulText = text.replace(/^Hangul:\s*/, '').trim();
+
+          // Create Action Buttons Container
+          const actionsSpan = document.createElement('span');
+          actionsSpan.className = 'inline-flex items-center gap-1.5 ml-2 align-middle';
+
+          // TTS Button
+          const ttsBtn = document.createElement('button');
+          ttsBtn.type = 'button';
+          ttsBtn.className = 'p-1 px-2 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white text-[11px] font-semibold transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs';
+          ttsBtn.title = 'Listen in Korean';
+          ttsBtn.innerHTML = '<span>🔊</span><span>Listen</span>';
+          ttsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            speakKorean(hangulText, ttsBtn);
+          });
+
+          // Copy Snippet Button with Scope-based Traversal
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'p-1 px-2 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-800 hover:text-white text-[11px] font-semibold transition-all cursor-pointer inline-flex items-center gap-1 shadow-2xs';
+          copyBtn.title = 'Copy lyric block to Anki / Notes';
+          copyBtn.innerHTML = '<span>📋</span><span>Copy</span>';
+          copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            let romanizationText = '';
+            let englishText = '';
+
+            // Search within parent list items
+            const parent = li.parentElement;
+            if (parent) {
+              const allSiblings = Array.from(parent.children);
+              const currentIdx = allSiblings.indexOf(li);
+              for (let j = currentIdx + 1; j < allSiblings.length; j++) {
+                const sibText = allSiblings[j].textContent.trim();
+                if (sibText.startsWith('Romanization:') && !romanizationText) {
+                  romanizationText = sibText.replace(/^Romanization:\s*/, '').trim();
+                } else if (sibText.startsWith('English Translation:') && !englishText) {
+                  englishText = sibText.replace(/^English Translation:\s*/, '').trim();
+                } else if (sibText.startsWith('Hangul:')) {
+                  break; // next verse
+                }
+              }
+            }
+
+            let snippet = `[Hangul] ${hangulText}\n`;
+            if (romanizationText) snippet += `[Romanization] ${romanizationText}\n`;
+            if (englishText) snippet += `[Meaning] ${englishText}\n`;
+
+            navigator.clipboard.writeText(snippet.trim()).then(() => {
+              showToast('Lyric block copied for Anki / Flashcards!', '✅');
+            });
+          });
+
+          actionsSpan.appendChild(ttsBtn);
+          actionsSpan.appendChild(copyBtn);
+          li.appendChild(actionsSpan);
+        }
+      });
+    });
+  </script>
 </BaseLayout>
+

@@ -18,13 +18,15 @@ All Korean lyrics and vocabulary must feature accurate Hangul, standard Revised 
      * Clear statement of the recommended Korean proficiency level (Beginner, Intermediate, or Advanced) and TOPIK/CEFR equivalent.
    - ## 2. Key Lyrics Breakdown (Hook & Chorus)
      * Present at least 4 to 6 lines from the most iconic chorus, pre-chorus, or hook.
-     * Format every line strictly in a 3-line breakdown:
+     * Format every line strictly in this breakdown format:
        - **Hangul**: [Original Korean text]
        - **Romanization**: [Accurate Revised Romanization]
-       - **English Translation**: [Natural meaning + literal nuance]
+       - **English Translation**: [Natural English translation]
+       - **Literal Breakdown**: [Word-for-word particle and word gloss, e.g. "나의 (my) 마음이 (heart-SUBJECT)"]
    - ## 3. Core Vocabulary Table
      * A clean Markdown Table with 6 to 10 essential Korean words from the lyrics.
-     * Columns: `| Hangul | Romanization | Part of Speech | English Meaning | Lyric Example |`
+     * Columns: `| Hangul | Phonetic [발음] | Romanization | Part of Speech | English Meaning | Lyric Example |`
+     * Include the actual spoken pronunciation in brackets when sound changes occur (e.g., `빛나다` | `[빈나다]`).
    - ## 4. Essential Grammar Deep Dive
      * Break down 2 major grammatical patterns found in the song.
      * For each pattern:

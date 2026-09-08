@@ -1,4 +1,6 @@
 ---
+import siteConfig from '../config/site';
+
 export interface Props {
   title: string;
   description: string;
@@ -11,6 +13,7 @@ export interface Props {
   faqs?: Array<{ question: string; answer: string }>;
   tags?: string[];
   gaId?: string;
+  googleVerification?: string;
   naverVerification?: string;
 }
 
@@ -21,20 +24,21 @@ const {
   article = false,
   pubDate,
   updatedDate,
-  author = '앱시안 (absian)',
+  author = siteConfig.site.author || 'K-Pop Hangul Team',
   canonicalURL = Astro.url.href,
   faqs,
   tags = [],
-  gaId = import.meta.env.PUBLIC_GA_ID || '',
-  naverVerification = import.meta.env.PUBLIC_NAVER_VERIFICATION || 'ca222471eefa2cd5ee78b56c06323e07',
+  gaId = siteConfig.seo.gaId || import.meta.env.PUBLIC_GA_ID || '',
+  googleVerification = siteConfig.seo.googleVerification || import.meta.env.PUBLIC_GOOGLE_VERIFICATION || '',
+  naverVerification = siteConfig.seo.naverVerification || import.meta.env.PUBLIC_NAVER_VERIFICATION || '',
 } = Astro.props;
 
-const siteTitle = '앱시안(absian)';
+const siteName = siteConfig.site.shortName || 'K-Pop Hangul';
 let formattedTitle = title;
 
-if (!title.includes('앱시안') && !title.includes('absian')) {
-  if (title.length + siteTitle.length + 3 <= 40) {
-    formattedTitle = `${title} | ${siteTitle}`;
+if (!title.includes(siteName)) {
+  if (title.length + siteName.length + 3 <= 60) {
+    formattedTitle = `${title} | ${siteName}`;
   } else {
     formattedTitle = title;
   }
@@ -45,25 +49,25 @@ const resolvedImage = (article && articleSlug && (image === '/images/default-her
   ? `/og/${articleSlug}.svg`
   : image;
 
-const absoluteImageUrl = new URL(resolvedImage, Astro.site || 'https://absianp.github.io').href;
-const siteUrl = Astro.site?.href || 'https://absianp.github.io';
+const siteUrl = siteConfig.site.url || Astro.site?.href || 'https://kpop-hangul.github.io';
+const absoluteImageUrl = new URL(resolvedImage, siteUrl).href;
 
 // Structured Data: Article / BlogPosting
 const articleSchema = article ? {
   '@context': 'https://schema.org',
-  '@type': 'BlogPosting',
+  '@type': 'LearningResource',
   'headline': title,
   'description': description,
   'image': [absoluteImageUrl],
   'datePublished': pubDate ? pubDate.toISOString() : new Date().toISOString(),
   'dateModified': updatedDate ? updatedDate.toISOString() : (pubDate ? pubDate.toISOString() : new Date().toISOString()),
   'author': {
-    '@type': 'Person',
+    '@type': 'Organization',
     'name': author,
   },
   'publisher': {
     '@type': 'Organization',
-    'name': siteTitle,
+    'name': siteName,
     'logo': {
       '@type': 'ImageObject',
       'url': new URL('/favicon.png', siteUrl).href,
@@ -74,9 +78,11 @@ const articleSchema = article ? {
     '@id': canonicalURL,
   },
   'keywords': tags.join(', '),
+  'inLanguage': 'en',
+  'educationalLevel': 'Beginner, Intermediate, Advanced',
 } : null;
 
-// Structured Data: FAQPage (Great for Google Rich Snippets CTR)
+// Structured Data: FAQPage
 const faqSchema = (faqs && faqs.length > 0) ? {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
@@ -102,8 +108,12 @@ const faqSchema = (faqs && faqs.length > 0) ? {
 <title>{formattedTitle}</title>
 <meta name="title" content={formattedTitle} />
 <meta name="description" content={description} />
+<meta name="author" content={author} />
 {tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+<!-- Verification Tags -->
+{googleVerification && <meta name="google-site-verification" content={googleVerification} />}
+{naverVerification && <meta name="naver-site-verification" content={naverVerification} />}
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content={article ? 'article' : 'website'} />
@@ -111,11 +121,8 @@ const faqSchema = (faqs && faqs.length > 0) ? {
 <meta property="og:title" content={formattedTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:image" content={absoluteImageUrl} />
-<meta property="og:site_name" content={siteTitle} />
-<meta property="og:locale" content="ko_KR" />
-{pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
-{updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
-{tags.map(tag => <meta property="article:tag" content={tag} />)}
+<meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content="en_US" />
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
@@ -124,16 +131,15 @@ const faqSchema = (faqs && faqs.length > 0) ? {
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={absoluteImageUrl} />
 
-<!-- Google AdSense Official Script & Account Verification -->
-<meta name="google-adsense-account" content="ca-pub-3054784185688248" />
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3054784185688248" crossorigin="anonymous"></script>
-
-<!-- Naver Search Advisor Verification -->
-{naverVerification && (
-  <meta name="naver-site-verification" content={naverVerification} />
+<!-- JSON-LD Structured Data -->
+{articleSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+)}
+{faqSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
 )}
 
-<!-- Google Analytics 4 (GA4) -->
+<!-- Google Analytics (GA4) -->
 {gaId && (
   <>
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
@@ -144,12 +150,4 @@ const faqSchema = (faqs && faqs.length > 0) ? {
       gtag('config', gaId);
     </script>
   </>
-)}
-
-<!-- JSON-LD Structured Data for High Google Search Visibility -->
-{articleSchema && (
-  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
-)}
-{faqSchema && (
-  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
 )}
