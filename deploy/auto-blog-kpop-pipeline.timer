@@ -1,0 +1,9 @@
+[Unit]
+Description=K-Pop Hangul - Daily 3-Song Learning Pipeline Timer (Daily 06:00 KST)
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

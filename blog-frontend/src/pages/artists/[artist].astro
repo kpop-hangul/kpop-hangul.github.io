@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import { getArtistSlug } from '../../utils/slug';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => import.meta.env.PROD ? !data.draft : true);
+
+  const artistMap: Record<string, { rawName: string; posts: any[] }> = {};
+
+  for (const post of allPosts) {
+    const raw = (post.data.artist || 'Various Artists').trim();
+    const slug = getArtistSlug(raw);
+    if (!artistMap[slug]) {
+      artistMap[slug] = { rawName: raw, posts: [] };
+    }
+    artistMap[slug].posts.push(post);
+  }
+
+  return Object.keys(artistMap).map(slug => {
+    const item = artistMap[slug];
+    const sorted = item.posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+    return {
+      params: { artist: slug },
+      props: {
+        artistSlug: slug,
+        artistName: item.rawName,
+        posts: sorted,
+      },
+    };
+  });
+}
+
+const { artistSlug, artistName, posts } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout
+  title={`Learn Korean with ${artistName} Songs | K-Pop Hangul`}
+  description={`Korean language song lessons by ${artistName}. Detailed lyrics, Hangul vocabulary, and grammar explanations.`}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <nav class="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
+      <a href={`${base}/`} class="hover:text-indigo-600 transition-colors">Home</a>
+      <span>/</span>
+      <a href={`${base}/artists/`} class="hover:text-indigo-600 transition-colors">Artists</a>
+      <span>/</span>
+      <span class="text-indigo-600 font-semibold">{artistName}</span>
+    </nav>
+
+    <div class="flex items-center gap-5 mb-10 p-6 sm:p-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-3xl border border-indigo-100">
+      <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md flex-shrink-0">
+        {artistName.charAt(0).toUpperCase()}
+      </div>
+      <div>
+        <div class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider mb-1">
+          Artist Portfolio
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          {artistName}
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">
+          {posts.length} Korean language song breakdown{posts.length !== 1 ? 's' : ''} available
+        </p>
+      </div>
+    </div>
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-8">
+        {posts.map(post => (
+          <Card
+            title={post.data.title}
+            description={post.data.description}
+            pubDate={post.data.pubDate}
+            slug={post.slug}
+            category={post.data.category}
+            difficulty={post.data.difficulty}
+            genre={post.data.genre}
+            artist={post.data.artist}
+            songTitle={post.data.songTitle}
+            hangulTitle={post.data.hangulTitle}
+            chartRank={post.data.chartRank}
+            readingTime={post.data.readingTime}
+            heroImage={post.data.heroImage}
+            tags={post.data.tags}
+          />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
+        <p class="text-slate-500 text-sm">No lessons available yet for this artist.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

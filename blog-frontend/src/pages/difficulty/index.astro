@@ -1,0 +1,158 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getDifficultyStats } from '../../utils/kpop';
+import { getCollection } from 'astro:content';
+import Card from '../../components/Card.astro';
+import { getDifficultySlug } from '../../utils/slug';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const difficulties = await getDifficultyStats();
+
+const allPosts = await getCollection('blog', ({ data }) => import.meta.env.PROD ? !data.draft : true);
+
+const levelGuides = [
+  {
+    slug: 'beginner',
+    title: 'Beginner (Level 1)',
+    badge: '🟢 Beginner',
+    subtitle: 'Catchy Hooks, Basic Hangul & Essential Everyday Vocabulary',
+    topik: 'TOPIK I (Levels 1-2) / CEFR A1-A2',
+    description: 'Perfect for beginners who have just learned Hangul or are taking their first steps. These songs feature repetitive chorus lines, clear pronunciations, basic sentence endings (-아요/어요), and daily essential words.',
+    skills: ['Reading basic Hangul syllables smoothly', 'Simple present and past tense verb endings', 'Common emotion words, greetings & core nouns', 'Clear vowel and consonant pronunciation'],
+    color: 'emerald'
+  },
+  {
+    slug: 'intermediate',
+    title: 'Intermediate (Level 2)',
+    badge: '🟡 Intermediate',
+    subtitle: 'Conversational Fluency, Idiomatic Nuance & Verb Conjugations',
+    topik: 'TOPIK II (Levels 3-4) / CEFR B1-B2',
+    description: 'Designed for learners ready to grasp natural conversational flow. Lessons break down connecting particles (-(으)면서, -는데), expressive idioms, spoken colloquialisms, and emotional lyricism.',
+    skills: ['Compound connecting grammar patterns', 'Spoken vs written Korean distinctions', 'Expressing nuanced emotions, regrets & wishes', 'Batchim sound linking (연음) in rhythmic flow'],
+    color: 'amber'
+  },
+  {
+    slug: 'advanced',
+    title: 'Advanced (Level 3)',
+    badge: '🔴 Advanced',
+    subtitle: 'Rapid Rap Bars, Deep Metaphors, Wordplay & Poetic Depth',
+    topik: 'TOPIK II (Levels 5-6) / CEFR C1-C2',
+    description: 'For ambitious learners seeking mastery. Analyze intricate Korean rap verses, cultural double entendres, Hanja-rooted poetic imagery, and complex rhetorical structures from K-Pop lyricists.',
+    skills: ['Rapid Korean articulation and sound assimilation', 'Metaphorical expressions & poetic idioms', 'Sino-Korean (Hanja) high-register vocabulary', 'Modern Korean youth slang (MZ 은어) & rhyme schemes'],
+    color: 'rose'
+  }
+];
+---
+
+<BaseLayout
+  title="Korean Difficulty Levels Guide | Learn Korean with K-Pop"
+  description="Choose your Korean learning path by proficiency level. From beginner-friendly pop hooks to fast rap verses and poetic ballads."
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Page Header -->
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-3">
+        🎯 Structured Learning Curriculum
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
+        Choose Your Korean Level
+      </h1>
+      <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+        Every K-Pop song is analyzed and classified into three precise difficulty levels. Pick the tier that matches your current Korean skill and start singing with comprehension!
+      </p>
+    </div>
+
+    <!-- 3 Level Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+      {levelGuides.map(lvl => {
+        const stats = difficulties.find(d => d.slug === lvl.slug);
+        const count = stats ? stats.count : 0;
+        return (
+          <div class="bg-white rounded-3xl border border-slate-200/90 p-8 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <span class="text-sm font-black px-3 py-1 rounded-full bg-slate-100 text-slate-800">
+                  {lvl.badge}
+                </span>
+                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  {count} songs available
+                </span>
+              </div>
+
+              <h2 class="text-2xl font-extrabold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                {lvl.title}
+              </h2>
+              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                {lvl.topik}
+              </div>
+
+              <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                {lvl.description}
+              </p>
+
+              <div class="space-y-2 mb-6 pt-4 border-t border-slate-100">
+                <div class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">What you will master:</div>
+                {lvl.skills.map(sk => (
+                  <div class="flex items-start gap-2 text-xs text-slate-600">
+                    <span class="text-emerald-500 font-bold">✓</span>
+                    <span>{sk}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <a
+              href={`${base}/difficulty/${lvl.slug}/`}
+              class="w-full text-center py-3 px-4 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-sm transition-colors shadow-xs"
+            >
+              Explore {lvl.title} Lessons →
+            </a>
+          </div>
+        );
+      })}
+    </div>
+
+    <!-- All Recent Lessons by Level -->
+    <div class="space-y-12">
+      {levelGuides.map(lvl => {
+        const postsInLevel = allPosts.filter(p => getDifficultySlug(p.data.difficulty || p.data.category) === lvl.slug).slice(0, 3);
+        if (postsInLevel.length === 0) return null;
+        return (
+          <section class="pt-8 border-t border-slate-200">
+            <div class="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <span>{lvl.badge}</span> Latest Songs
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Top recommendations for this level</p>
+              </div>
+              <a href={`${base}/difficulty/${lvl.slug}/`} class="text-xs font-semibold text-indigo-600 hover:underline">
+                View all in {lvl.title} →
+              </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {postsInLevel.map(post => (
+                <Card
+                  title={post.data.title}
+                  description={post.data.description}
+                  pubDate={post.data.pubDate}
+                  slug={post.slug}
+                  category={post.data.category}
+                  difficulty={post.data.difficulty}
+                  genre={post.data.genre}
+                  artist={post.data.artist}
+                  songTitle={post.data.songTitle}
+                  hangulTitle={post.data.hangulTitle}
+                  chartRank={post.data.chartRank}
+                  readingTime={post.data.readingTime}
+                  heroImage={post.data.heroImage}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>

@@ -1,12 +1,19 @@
 ---
-import { getCategorySlug } from '../utils/slug';
+import { getCategorySlug, getDifficultySlug, getGenreSlug, getArtistSlug } from '../utils/slug';
 
 export interface Props {
   title: string;
   description: string;
   pubDate: Date;
   slug: string;
-  category: string;
+  category?: string;
+  difficulty?: string;
+  genre?: string;
+  artist?: string;
+  songTitle?: string;
+  hangulTitle?: string;
+  chartRank?: number;
+  chartSource?: string;
   readingTime?: string;
   heroImage?: string;
   tags?: string[];
@@ -17,55 +24,111 @@ const {
   description,
   pubDate,
   slug,
-  category,
-  readingTime = '5 min read',
+  category = 'Beginner (Level 1)',
+  difficulty = 'Beginner',
+  genre = 'Dance & Pop',
+  artist = 'Various Artists',
+  songTitle,
+  hangulTitle,
+  chartRank,
+  chartSource = 'Melon Top 100',
+  readingTime = '6 min read',
   heroImage = '/images/default-hero.svg',
   tags = [],
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const categorySlug = getCategorySlug(category);
+const diffSlug = getDifficultySlug(difficulty || category);
+const genreSlug = getGenreSlug(genre);
+const artistSlug = getArtistSlug(artist);
 
-const formattedDate = new Intl.DateTimeFormat('ko-KR', {
+// Difficulty Badge styles
+const diffBadges: Record<string, { label: string; bg: string; text: string; ring: string }> = {
+  beginner: { label: '🟢 Beginner', bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
+  intermediate: { label: '🟡 Intermediate', bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
+  advanced: { label: '🔴 Advanced', bg: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-200' },
+};
+
+const badge = diffBadges[diffSlug] || diffBadges.beginner;
+
+const formattedDate = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
-  month: 'long',
+  month: 'short',
   day: 'numeric',
 }).format(pubDate);
 ---
 
-<article class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col group">
+<article class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col group">
   <div class="p-6 flex-1 flex flex-col">
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <a
-        href={`${base}/categories/${categorySlug}/`}
-        class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-      >
-        {category}
-      </a>
-      <span class="text-xs text-slate-400">{readingTime}</span>
+    <!-- Top Metadata Badges -->
+    <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <!-- Difficulty Badge -->
+        <a
+          href={`${base}/difficulty/${diffSlug}/`}
+          class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ring-1 ${badge.bg} ${badge.text} ${badge.ring} hover:opacity-80 transition-opacity`}
+        >
+          {badge.label}
+        </a>
+
+        <!-- Genre Badge -->
+        <a
+          href={`${base}/genres/${genreSlug}/`}
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+        >
+          {genre}
+        </a>
+      </div>
+
+      <!-- Chart Rank or Reading Time -->
+      {chartRank ? (
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300/60">
+          🏆 #{chartRank}
+        </span>
+      ) : (
+        <span class="text-xs text-slate-400 font-medium">{readingTime}</span>
+      )}
     </div>
 
-    <!-- Title -->
-    <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+    <!-- Artist Name -->
+    <div class="mb-1">
+      <a
+        href={`${base}/artists/${artistSlug}/`}
+        class="text-xs font-bold text-indigo-600 uppercase tracking-wider hover:underline"
+      >
+        {artist}
+      </a>
+      {hangulTitle && (
+        <span class="text-xs text-slate-400 ml-1.5 font-medium">({hangulTitle})</span>
+      )}
+    </div>
+
+    <!-- Song Lesson Title -->
+    <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2 leading-snug">
       <a href={`${base}/blog/${slug}/`}>
         {title}
       </a>
     </h3>
 
     <!-- Description -->
-    <p class="text-sm text-slate-600 line-clamp-3 mb-4 flex-1">
+    <p class="text-sm text-slate-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
       {description}
     </p>
 
     <!-- Footer Meta -->
     <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-      <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+      <div class="flex items-center gap-2">
+        <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+        <span>•</span>
+        <span>{readingTime}</span>
+      </div>
       <a
         href={`${base}/blog/${slug}/`}
-        class="text-blue-600 font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1"
+        class="text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1"
       >
-        읽기 →
+        Learn Song →
       </a>
     </div>
   </div>
 </article>
+

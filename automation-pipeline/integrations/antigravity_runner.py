@@ -39,7 +39,7 @@ class AntigravityRunner:
     def is_cli_available(self) -> bool:
         return self.get_cli_path() is not None
 
-    def generate_text(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    def generate_text(self, system_prompt: str, user_prompt: str, model_name: Optional[str] = None, effort: Optional[str] = None) -> Optional[str]:
         """
         Antigravity CLI 또는 SDK, 로컬 엔진을 통해 텍스트 생성 수행
         """
@@ -49,20 +49,48 @@ class AntigravityRunner:
             try:
                 full_prompt = f"{system_prompt}\n\n[USER REQUEST]\n{user_prompt}"
                 
-                print(f"🤖 Antigravity CLI ({cli_path})를 호출하여 콘텐츠 생성 중...")
+                cmd = [cli_path, "--dangerously-skip-permissions"]
+                mapped_model = model_name
+                mapped_effort = effort
+                if model_name:
+                    if "gemini-3.1-pro" in model_name:
+                        mapped_model = "gemini-3.1-pro-high" if effort != "low" else "gemini-3.1-pro-low"
+                        mapped_effort = None
+                    elif "flash" in model_name:
+                        mapped_model = "gemini-3.8-flash-high"
+                        mapped_effort = None
+
+                if mapped_model:
+                    cmd.extend(["--model", mapped_model])
+                if mapped_effort:
+                    cmd.extend(["--effort", mapped_effort])
+                cmd.extend(["-p", full_prompt])
+
+                print(f"🤖 Antigravity CLI 호출 중... (모델: {mapped_model or 'default'}, 추론: {mapped_effort or 'default'})")
                 env = os.environ.copy()
                 env["PATH"] = f"{os.path.expanduser('~/.local/bin')}:/usr/local/bin:/usr/bin:/bin:" + env.get("PATH", "")
                 
                 result = subprocess.run(
-                    [cli_path, "--dangerously-skip-permissions", "-p", full_prompt],
+                    cmd,
                     capture_output=True,
                     text=True,
-                    timeout=240,
+                    timeout=300,
                     env=env
                 )
                 if result.returncode == 0 and result.stdout.strip():
                     return result.stdout.strip()
                 else:
+                    if model_name or effort:
+                        print(f"⚠️ [AntigravityRunner] CLI 플래그 오류 ({result.stderr.strip()[:100]}). 기본 옵션으로 재시도...")
+                        res_fallback = subprocess.run(
+                            [cli_path, "--dangerously-skip-permissions", "-p", full_prompt],
+                            capture_output=True,
+                            text=True,
+                            timeout=240,
+                            env=env
+                        )
+                        if res_fallback.returncode == 0 and res_fallback.stdout.strip():
+                            return res_fallback.stdout.strip()
                     print(f"[AntigravityRunner] CLI 반환 에러 code={result.returncode}: {result.stderr}")
             except Exception as e:
                 print(f"[AntigravityRunner] CLI 실행 예외: {e}")

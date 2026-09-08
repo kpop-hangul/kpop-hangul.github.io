@@ -1,9 +1,8 @@
 """
-AI Agent Modules for Auto Blog System
+AI Agent Modules for K-Pop Hangul Blog System
 """
-from .keyword_harvester import KeywordHarvester
 from .content_writer import ContentWriter
-from .policy_inspector import PolicyInspector
-from .performance_tracker import PerformanceTracker
+from .editorial_reviewer import EditorialReviewAgent
 
-__all__ = ["KeywordHarvester", "ContentWriter", "PolicyInspector", "PerformanceTracker"]
+__all__ = ["ContentWriter", "EditorialReviewAgent"]
+

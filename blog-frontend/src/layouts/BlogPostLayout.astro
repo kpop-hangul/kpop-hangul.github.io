@@ -2,10 +2,8 @@
 import BaseLayout from './BaseLayout.astro';
 import AdSense from '../components/AdSense.astro';
 import TableOfContents from '../components/TableOfContents.astro';
-import Giscus from '../components/Giscus.astro';
 import RelatedPosts from '../components/RelatedPosts.astro';
-import DigitalProductCTA from '../components/DigitalProductCTA.astro';
-import { getCategorySlug, getTagSlug } from '../utils/slug';
+import { getDifficultySlug, getGenreSlug, getArtistSlug, getDifficultyName } from '../utils/slug';
 
 export interface Props {
   frontmatter: {
@@ -14,6 +12,13 @@ export interface Props {
     pubDate: Date;
     updatedDate?: Date;
     category?: string;
+    difficulty?: string;
+    genre?: string;
+    artist?: string;
+    songTitle?: string;
+    hangulTitle?: string;
+    chartRank?: number;
+    chartSource?: string;
     tags?: string[];
     author?: string;
     readingTime?: string;
@@ -30,17 +35,33 @@ const {
   description,
   pubDate,
   updatedDate,
-  category = 'General',
+  category = 'Beginner (Level 1)',
+  difficulty = 'Beginner',
+  genre = 'Dance & Pop',
+  artist = 'Various Artists',
+  songTitle,
+  hangulTitle,
+  chartRank,
+  chartSource = 'Melon Top 100',
   tags = [],
-  author = '앱시안 (absian)',
-  readingTime = '5 min read',
+  author = 'K-Pop Hangul Team',
+  readingTime = '6 min read',
   faqs = [],
 } = frontmatter;
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const categorySlug = getCategorySlug(category);
+const diffSlug = getDifficultySlug(difficulty || category);
+const genreSlug = getGenreSlug(genre);
+const artistSlug = getArtistSlug(artist);
 
-const formattedDate = new Intl.DateTimeFormat('ko-KR', {
+const diffBadges: Record<string, { label: string; bg: string; text: string; ring: string }> = {
+  beginner: { label: '🟢 Beginner (Level 1)', bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
+  intermediate: { label: '🟡 Intermediate (Level 2)', bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-200' },
+  advanced: { label: '🔴 Advanced (Level 3)', bg: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-200' },
+};
+const badge = diffBadges[diffSlug] || diffBadges.beginner;
+
+const formattedDate = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
@@ -59,46 +80,82 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', {
 >
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- Breadcrumb Navigation -->
-    <nav class="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
-      <a href={`${base}/`} class="hover:text-blue-600 transition-colors">홈</a>
+    <nav class="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium flex-wrap">
+      <a href={`${base}/`} class="hover:text-indigo-600 transition-colors">Home</a>
       <span>/</span>
-      <a href={`${base}/blog/`} class="hover:text-blue-600 transition-colors">블로그</a>
+      <a href={`${base}/blog/`} class="hover:text-indigo-600 transition-colors">Songs</a>
       <span>/</span>
-      <a href={`${base}/categories/${categorySlug}/`} class="text-blue-600 hover:underline">{category}</a>
+      <a href={`${base}/difficulty/${diffSlug}/`} class="hover:text-indigo-600 transition-colors">{getDifficultyName(diffSlug)}</a>
+      <span>/</span>
+      <span class="text-indigo-600 font-semibold truncate max-w-[200px]">{songTitle || title}</span>
     </nav>
 
     <!-- Article Header -->
     <header class="mb-8">
-      <div class="flex items-center gap-2 mb-4">
+      <!-- Badges Row -->
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
         <a
-          href={`${base}/categories/${categorySlug}/`}
-          class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full hover:bg-blue-100 transition-colors"
+          href={`${base}/difficulty/${diffSlug}/`}
+          class={`px-3 py-1 text-xs font-bold rounded-full ring-1 ${badge.bg} ${badge.text} ${badge.ring} hover:opacity-80 transition-opacity`}
         >
-          {category}
+          {badge.label}
         </a>
+
+        <a
+          href={`${base}/genres/${genreSlug}/`}
+          class="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full hover:bg-slate-200 transition-colors"
+        >
+          {genre}
+        </a>
+
+        {chartRank && (
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+            🏆 {chartSource} #{chartRank}
+          </span>
+        )}
+
         <span class="text-xs text-slate-400">•</span>
         <span class="text-xs text-slate-500">{readingTime}</span>
       </div>
 
-      <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
+      <!-- Artist & Hangul Title Subheading -->
+      <div class="flex items-center gap-2 text-sm font-bold text-indigo-600 mb-2">
+        <a href={`${base}/artists/${artistSlug}/`} class="hover:underline">
+          {artist}
+        </a>
+        {hangulTitle && (
+          <span class="text-slate-500 font-normal">({hangulTitle})</span>
+        )}
+      </div>
+
+      <!-- Main Title -->
+      <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight mb-4">
         {title}
       </h1>
 
+      <!-- Description -->
       <p class="text-base sm:text-lg text-slate-600 leading-relaxed mb-6">
         {description}
       </p>
 
       <!-- Author & Date Info -->
-      <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200/80 text-xs text-slate-500">
-        <img
-          src={`${base}/favicon.png`}
-          alt="앱시안(absian) 로고"
-          class="w-8 h-8 rounded-lg shadow-sm flex-shrink-0"
-        />
-        <div>
-          <p class="font-semibold text-slate-800">{author}</p>
-          <p>발행일: {formattedDate} {updatedDate && `(최종 수정: ${new Intl.DateTimeFormat('ko-KR').format(updatedDate)})`}</p>
+      <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-500">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-sm flex items-center justify-center">
+            🎵
+          </div>
+          <div>
+            <p class="font-bold text-slate-800">{author}</p>
+            <p>Published: {formattedDate} {updatedDate && `(Updated: ${new Intl.DateTimeFormat('en-US').format(updatedDate)})`}</p>
+          </div>
         </div>
+
+        <a
+          href={`${base}/artists/${artistSlug}/`}
+          class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hidden sm:inline"
+        >
+          More by {artist} →
+        </a>
       </div>
     </header>
 
@@ -109,7 +166,7 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', {
     <TableOfContents headings={headings} />
 
     <!-- Article Markdown Content -->
-    <div class="prose prose-slate prose-lg max-w-none bg-white p-6 sm:p-10 rounded-2xl border border-slate-200/80 shadow-sm leading-relaxed">
+    <div class="prose prose-slate prose-indigo prose-lg max-w-none bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs leading-relaxed">
       <slot />
     </div>
 
@@ -118,14 +175,14 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', {
 
     <!-- FAQ Accordion Section -->
     {faqs && faqs.length > 0 && (
-      <section class="my-10 p-6 bg-slate-100/70 rounded-2xl border border-slate-200">
+      <section class="my-10 p-6 sm:p-8 bg-slate-50 rounded-3xl border border-slate-200">
         <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <span>❓ 자주 묻는 질문 (FAQ)</span>
+          <span>❓ Frequently Asked Questions (FAQ)</span>
         </h2>
         <div class="space-y-4">
           {faqs.map((faq) => (
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-              <h3 class="font-semibold text-slate-900 text-sm mb-2">{faq.question}</h3>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+              <h3 class="font-bold text-slate-900 text-sm mb-2">{faq.question}</h3>
               <p class="text-slate-600 text-xs leading-relaxed">{faq.answer}</p>
             </div>
           ))}
@@ -133,93 +190,32 @@ const formattedDate = new Intl.DateTimeFormat('ko-KR', {
       </section>
     )}
 
-    <!-- Digital Product / Obsidian AI Starter Vault CTA -->
-    {tags.some(t => t.includes('옵시디언') || t.includes('생산성') || t.includes('템플릿')) && (
-      <DigitalProductCTA />
-    )}
-
-    <!-- Tags List -->
-    {tags.length > 0 && (
-      <div class="my-8 flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold text-slate-500 mr-1">태그:</span>
-        {tags.map(tag => (
+    <!-- Prev / Next Lesson Navigation -->
+    {(prevPost || nextPost) && (
+      <nav class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-10 pt-8 border-t border-slate-200">
+        {prevPost ? (
           <a
-            href={`${base}/tags/${getTagSlug(tag)}/`}
-            class="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg text-xs font-medium transition-colors"
+            href={`${base}/blog/${prevPost.slug}/`}
+            class="p-4 rounded-2xl border border-slate-200 hover:border-indigo-400 bg-white shadow-2xs transition-all group"
           >
-            #{tag}
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">← Previous Song</span>
+            <span class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 line-clamp-1">{prevPost.title}</span>
           </a>
-        ))}
-      </div>
+        ) : <div />}
+
+        {nextPost && (
+          <a
+            href={`${base}/blog/${nextPost.slug}/`}
+            class="p-4 rounded-2xl border border-slate-200 hover:border-indigo-400 bg-white shadow-2xs transition-all group text-right sm:text-right"
+          >
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Next Song →</span>
+            <span class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 line-clamp-1">{nextPost.title}</span>
+          </a>
+        )}
+      </nav>
     )}
-
-    <!-- Prev / Next Post Navigation Cards -->
-    <nav class="my-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {prevPost ? (
-        <a
-          href={`${base}/blog/${prevPost.slug}/`}
-          class="group p-5 bg-white hover:bg-blue-50/50 rounded-2xl border border-slate-200 hover:border-blue-300 shadow-sm hover:shadow transition-all duration-200 flex flex-col justify-between text-left"
-        >
-          <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400 group-hover:text-blue-600 mb-2 transition-colors">
-            <span>←</span>
-            <span>이전 글</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 group-hover:text-blue-600 line-clamp-2 transition-colors">
-            {prevPost.title}
-          </p>
-        </a>
-      ) : (
-        <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center justify-center text-xs text-slate-400">
-          가장 첫 번째 글입니다.
-        </div>
-      )}
-
-      {nextPost ? (
-        <a
-          href={`${base}/blog/${nextPost.slug}/`}
-          class="group p-5 bg-white hover:bg-blue-50/50 rounded-2xl border border-slate-200 hover:border-blue-300 shadow-sm hover:shadow transition-all duration-200 flex flex-col justify-between text-right"
-        >
-          <div class="flex items-center justify-end gap-1.5 text-xs font-semibold text-slate-400 group-hover:text-blue-600 mb-2 transition-colors">
-            <span>다음 글</span>
-            <span>→</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 group-hover:text-blue-600 line-clamp-2 transition-colors">
-            {nextPost.title}
-          </p>
-        </a>
-      ) : (
-        <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center justify-center text-xs text-slate-400">
-          가장 최신 글입니다.
-        </div>
-      )}
-    </nav>
-
-    <!-- Giscus Comments -->
-    <Giscus />
 
     <!-- Bottom AdSense Slot -->
     <AdSense slotId="4567890123" type="bottom-banner" />
-
-    <!-- Related Posts Section (체류시간 & 내부 링크 최적화) -->
-    <RelatedPosts
-      currentSlug={Astro.params.slug || ''}
-      currentCategory={category}
-      currentTags={tags}
-    />
-
-    <!-- Author Bio Box -->
-    <div class="mt-8 p-6 bg-slate-900 text-slate-200 rounded-2xl flex items-center gap-4">
-      <img
-        src={`${base}/favicon.png`}
-        alt="앱시안(absian) 로고"
-        class="w-12 h-12 rounded-xl shadow-md flex-shrink-0"
-      />
-      <div>
-        <h4 class="font-bold text-white text-sm mb-1">{author}</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          AI 도구와 개발 자동화, 온라인 수익화 파이프라인을 연구하고 실용적인 가이드를 제공합니다.
-        </p>
-      </div>
-    </div>
   </div>
 </BaseLayout>

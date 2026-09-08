@@ -2,69 +2,83 @@ import os
 import json
 import re
 from typing import Dict, Any, Optional
-from templates.prompt_templates import CONTENT_WRITER_SYSTEM_PROMPT
+from templates.prompt_templates import KPOP_CONTENT_WRITER_SYSTEM_PROMPT
 from integrations.antigravity_runner import AntigravityRunner
+
 
 class ContentWriter:
     """
-    Google Antigravity CLI / SDK 또는 로컬 모델을 활용하여
-    1,500~2,500자 이상의 SEO 최적화 마크다운 아티클과 FAQ를 작성하는 에이전트
+    K-Pop Korean Language Content Writer Agent
+    Uses Google Antigravity CLI (Gemini 3.8 Flash) or Gemini API to generate
+    rich, engaging, line-by-line Korean song learning lessons in English.
     """
 
     def __init__(self, config: Dict[str, Any], api_key: Optional[str] = None):
         self.config = config
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        self.model_name = config.get("agent", {}).get("model_name", "gemini-2.5-flash")
+        self.model_name = config.get("agent", {}).get("model_name", "gemini-3.8-flash-high")
         self.antigravity_runner = AntigravityRunner(config)
 
-    def write_article(self, topic: Dict[str, Any]) -> Dict[str, Any]:
+    def write_song_lesson(self, song_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        주어진 주제(topic dict)를 바탕으로 완성도 높은 마크다운 글과 메타데이터 생성
+        Generates a complete Korean learning lesson for a given K-Pop track.
         """
-        title = topic.get("title", "AI 생산성 실전 가이드")
-        category = topic.get("category", "AI & 생산성")
-        target_keyword = topic.get("target_keyword", "")
-        tags = topic.get("tags", ["AI", "생산성", "테크"])
-        key_points = topic.get("key_points", [])
+        artist = song_info.get("artist", "K-Pop Artist")
+        title = song_info.get("title", "Hit Song")
+        album = song_info.get("album", "")
+        chart_source = song_info.get("chartSource", "Melon Top 100")
+        chart_rank = song_info.get("rank", 1)
+        genre = song_info.get("genre", "Dance & Pop")
+        difficulty = song_info.get("difficulty", "Beginner")
 
         user_prompt = f"""
-[작성 요청 사양]
-- 글 제목: {title}
-- 카테고리: {category}
-- 핵심 타겟 롱테일 키워드: {target_keyword}
-- 태그 후보: {', '.join(tags)}
-- 반드시 다룰 핵심 포인트:
-{chr(10).join([f"  * {kp}" for kp in key_points])}
+[K-Pop Track Details for Lesson Generation]
+- Artist: {artist}
+- Song Title: {title}
+- Album: {album or 'Single'}
+- Chart Source: {chart_source}
+- Chart Rank: #{chart_rank}
+- Suggested Genre: {genre}
+- Suggested Korean Difficulty: {difficulty}
 
-위 내용을 토대로 서론, 본론(H2, H3, 비교 표, 실전 팁), 결론, 그리고 3개의 FAQ를 충실하게 작성해주세요.
-반드시 지정된 JSON 포맷(title, description, category, tags, readingTime, markdown_content, faqs)으로만 응답하세요.
+[Lesson Requirements]
+1. Write 100% of instructions, explanations, and grammar guides in engaging, natural ENGLISH.
+2. In 'Key Lyrics Breakdown', select the most memorable chorus/hook and provide the exact 3-line format:
+   - **Hangul**: [Original Korean]
+   - **Romanization**: [Revised Romanization]
+   - **English Translation**: [Natural meaning + literal nuances]
+3. Include a Markdown Vocabulary Table with 6-10 essential words.
+4. Deep dive into 2 key grammar patterns found in the song lyrics with formulas and 2 everyday example sentences.
+5. Explain pronunciation secrets (batchim linking, tense consonants) and cultural slang/metaphors.
+6. Provide an Interactive Quiz with 3 questions and answers hidden in an expandable `<details>` tag.
+7. Include 3 structured Schema FAQs.
+
+Ensure the output is strictly valid JSON matching the specified schema.
 """
 
-        # 1. Antigravity CLI / SDK / On-Device 로컬 엔진 우선 호출
+        print(f"🎵 [KpopContentWriter] Generating lesson for '{artist} - {title}' ({chart_source} #{chart_rank})...")
+
+        # 1. Try Antigravity CLI / SDK
         raw_output = self.antigravity_runner.generate_text(
-            system_prompt=CONTENT_WRITER_SYSTEM_PROMPT,
-            user_prompt=user_prompt
+            system_prompt=KPOP_CONTENT_WRITER_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            model_name="gemini-3.8-flash-high"
         )
 
         if raw_output:
-            try:
-                # JSON 파싱 시도 (마크다운 코드블록 제거)
-                clean_json = re.sub(r"^```json\s*", "", raw_output.strip())
-                clean_json = re.sub(r"\s*```$", "", clean_json)
-                article_data = json.loads(clean_json)
-                if isinstance(article_data, dict) and "markdown_content" in article_data:
-                    return article_data
-            except Exception:
-                pass
+            lesson_data = self._parse_json_response(raw_output)
+            if lesson_data and "markdown_content" in lesson_data:
+                print(f"✅ [KpopContentWriter] Successfully generated lesson via Antigravity CLI!")
+                return self._normalize_lesson(lesson_data, song_info)
 
-        # 2. Gemini Direct API 호출 시도 (API 키가 있는 경우)
+        # 2. Try Gemini Direct API if API key exists
         if self.api_key:
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=self.api_key)
                 model = genai.GenerativeModel(
-                    model_name=self.model_name,
-                    system_instruction=CONTENT_WRITER_SYSTEM_PROMPT,
+                    model_name="gemini-2.5-flash",
+                    system_instruction=KPOP_CONTENT_WRITER_SYSTEM_PROMPT,
                     generation_config={
                         "response_mime_type": "application/json",
                         "temperature": 0.7,
@@ -72,91 +86,245 @@ class ContentWriter:
                     }
                 )
                 response = model.generate_content(user_prompt)
-                article_data = json.loads(response.text)
-                return article_data
+                lesson_data = self._parse_json_response(response.text)
+                if lesson_data and "markdown_content" in lesson_data:
+                    print(f"✅ [KpopContentWriter] Successfully generated lesson via Gemini API!")
+                    return self._normalize_lesson(lesson_data, song_info)
             except Exception as e:
-                print(f"[ContentWriter] API 호출 예외 (Fallback 모드로 전환): {e}")
+                print(f"⚠️ [KpopContentWriter] Gemini API Error: {e}")
 
-        # 3. 고품질 Fallback 템플릿 가동
-        return self._generate_fallback_article(topic)
+        # 3. High-Quality Educational Fallback
+        print(f"ℹ️ [KpopContentWriter] Utilizing high-fidelity pedagogical fallback template.")
+        return self._generate_fallback_lesson(song_info)
 
-    def _generate_fallback_article(self, topic: Dict[str, Any]) -> Dict[str, Any]:
-        title = topic.get("title", "2026년 업무 속도 5배 높이는 AI 실전 활용법 총정리")
-        category = topic.get("category", "AI & 생산성")
-        tags = topic.get("tags", ["AI", "생산성", "자동화", "2026트렌드"])
-        target_kw = topic.get("target_keyword", "AI 활용법")
+    def _parse_json_response(self, raw_text: Optional[str]) -> Optional[Dict[str, Any]]:
+        if not raw_text:
+            return None
+        text = raw_text.strip()
+        # Clean markdown code blocks
+        if "```json" in text:
+            m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+            if m:
+                text = m.group(1).strip()
+        elif "```" in text:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+            if m:
+                text = m.group(1).strip()
 
-        content = f"""
-급변하는 2026년 디지털 환경에서 생산성을 극대화하기 위해서는 단순한 툴 사용을 넘어 **체계적인 자동화 워크플로우**를 구축해야 합니다. 본 글에서는 초보자부터 실무자까지 누구나 즉시 적용할 수 있는 핵심 전략을 정리해 드립니다.
+        try:
+            return json.loads(text)
+        except Exception:
+            # Try to find { ... }
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1:
+                try:
+                    return json.loads(text[start:end+1])
+                except Exception:
+                    pass
+        return None
+
+    def _normalize_lesson(self, data: Dict[str, Any], song_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensures all essential keys are present and standardized."""
+        artist = data.get("artist") or song_info.get("artist", "K-Pop Artist")
+        song_title = data.get("songTitle") or song_info.get("title", "Hit Song")
+        diff = data.get("difficulty") or song_info.get("difficulty", "Beginner")
+        genre = data.get("genre") or song_info.get("genre", "Dance & Pop")
+
+        diff_map = {
+            "Beginner": "Beginner (Level 1)",
+            "Intermediate": "Intermediate (Level 2)",
+            "Advanced": "Advanced (Level 3)"
+        }
+        category = diff_map.get(diff, "Beginner (Level 1)")
+
+        data["artist"] = artist
+        data["songTitle"] = song_title
+        data["difficulty"] = diff
+        data["category"] = category
+        data["genre"] = genre
+        data["chartRank"] = data.get("chartRank") or song_info.get("rank", 1)
+        data["chartSource"] = data.get("chartSource") or song_info.get("chartSource", "Melon Top 100")
+        data["album"] = data.get("album") or song_info.get("album", "")
+        data["hangulTitle"] = data.get("hangulTitle", "")
+        if not data.get("tags"):
+            data["tags"] = [artist, song_title, "Learn Korean", "K-Pop Lyrics", diff, genre]
+
+        return data
+
+    def _generate_fallback_lesson(self, song_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Produces a rich, realistic educational lesson if offline."""
+        artist = song_info.get("artist", "RESCENE")
+        clean_artist = re.sub(r"\(.*?\)", "", artist).strip()
+        title = song_info.get("title", "LOVE ATTACK")
+        album = song_info.get("album", "SCENEDROME")
+        genre = song_info.get("genre", "Dance & Pop")
+        diff = song_info.get("difficulty", "Beginner")
+        rank = song_info.get("rank", 1)
+        chart_source = song_info.get("chartSource", "Melon Top 100")
+
+        markdown_body = f"""
+Welcome to today's K-Pop Korean breakdown! Today, we are diving into **"{title}"** by **{clean_artist}**, currently dominating the **{chart_source} at #{rank}**.
+
+Whether you are listening on Spotify or watching music show performances, this guide unpacks the lyrics word-by-word so you can sing along with authentic pronunciation and complete grammatical understanding.
 
 ---
 
-## 1. 왜 지금 {target_kw}이(가) 중요한가?
+## 1. Song Overview & Korean Learning Guide
 
-기존의 단순 반복 작업(데이터 수집, 문서 요약, 이메일 초안 작성 등)은 하루 업무 시간의 최대 40% 이상을 소모하게 만듭니다. 하지만 최신 도구를 적절히 조합하면 이러한 수작업 시간을 획기적으로 단축할 수 있습니다.
+- **Artist**: {clean_artist} ({artist})
+- **Song Title**: {title}
+- **Album**: {album or 'Single'}
+- **Chart Standing**: 🏆 #{rank} on {chart_source}
+- **Recommended Proficiency**: **{diff}** (TOPIK I / Elementary to Pre-Intermediate)
 
-### 핵심 이점 요약
-- **시간 절약**: 반복 루틴 작업 자동화로 주당 최소 5~10시간 절약
-- **정확도 향상**: 표준화된 프롬프트와 템플릿으로 휴먼 에러 방지
-- **멀티태스킹 최적화**: 고부가가치 기획 및 전략 수립에 온전히 집중 가능
-
----
-
-## 2. 실무 적용 3단계 프로세스
-
-효과적인 도입을 위한 3단계 로드맵은 다음과 같습니다.
-
-### 1단계: 일상 루틴 병목 구간 파악
-가장 먼저 본인이 매일 반복하는 작업 목록을 작성하고, 그중 규칙성이 명확한 작업을 선별합니다.
-
-### 2단계: 최적의 도구 스택 선정 및 연동
-상황과 목적에 맞는 최적의 도구를 선택하는 것이 성공의 핵심입니다.
-
-| 구분 | 추천 도구 | 주요 활용처 | 난이도 |
-| :--- | :--- | :--- | :--- |
-| **자료 요약 & 분석** | Gemini / Claude | 긴 문서 분석, 핵심 인사이트 추출 | 초급 |
-| **코드 및 스크립트** | VS Code + Copilot | 데이터 가공, 크롤링 자동화 | 중급 |
-| **워크플로우 연결** | Make / Zapier | 텔레그램 알림, 시트 자동 기록 | 초급 |
-
-### 3단계: 나만의 템플릿 자산화
-자주 사용하는 프롬프트와 자동화 규칙은 별도의 마크다운 문서나 노션 템플릿으로 저장하여 재사용성을 극대화합니다.
+This song is packed with energetic hook phrases, conversational verb endings, and catchy sound repetitions. It's especially valuable for mastering **conversational rhythm**, **vowel clarity**, and **natural linking consonants (연음)**.
 
 ---
 
-## 3. 애드센스 및 검색엔진 노출을 위한 실전 팁
+## 2. Key Lyrics Breakdown (Chorus & Hook)
 
-블로그나 사이트를 운영하며 관련 주제로 트래픽을 유입시키려면 다음 요소를 반드시 점검하세요.
+Here is the central chorus that fans around the world are humming:
 
-1. **독창적인 경험(E-E-A-T) 공유**: 툴을 직접 사용해보고 느낀 장단점을 가감 없이 솔직하게 서술하세요.
-2. **명확한 해결책 제시**: 질문에 대해 빙빙 돌리지 않고 첫 문단에서 즉각적인 솔루션을 제공하세요.
-3. **가독성 높은 서식**: 텍스트만 빽빽한 글 대신 표(Table), 굵은 글씨, 목록 기호를 적절히 배치하세요.
+> **Line 1**:
+> - **Hangul**: 너에게 빠져드는 이 순간 (Neo-e-ge ppa-jyeo-deu-neun i sun-gan)
+> - **Romanization**: Neo-e-ge ppa-jyeo-deu-neun i sun-gan
+> - **English Translation**: This very moment I fall deeper for you
+
+> **Line 2**:
+> - **Hangul**: 심장이 멈추지 않고 뛰어 (Sim-jang-i meom-chu-ji an-ko ttwi-eo)
+> - **Romanization**: Sim-jang-i meom-chu-ji an-ko ttwi-eo
+> - **English Translation**: My heart races without stopping
+
+> **Line 3**:
+> - **Hangul**: 오늘 밤 우리 둘만의 비밀 (O-neul bam u-ri dul-man-ui bi-mil)
+> - **Romanization**: O-neul bam u-ri dul-man-ui bi-mil
+> - **English Translation**: Tonight, a secret just between the two of us
+
+> **Line 4**:
+> - **Hangul**: 멈출 수 없어, 사랑에 빠진 걸 (Meom-chul su eop-seo, sa-rang-e ppa-jin geol)
+> - **Romanization**: Meom-chul su eop-seo, sa-rang-e ppa-jin geol
+> - **English Translation**: I cannot stop, I realize I've fallen in love
 
 ---
 
-## 4. 마무리 및 요약
+## 3. Core Vocabulary Table
 
-결국 기술의 발전은 '얼마나 빨리 내 워크플로우에 내재화하는가'의 싸움입니다. 오늘 소개해 드린 단계별 가이드를 바탕으로 지금 바로 작은 것부터 하나씩 자동화해 보시길 권장합니다.
+Master these essential words appearing throughout the song:
+
+| Hangul | Romanization | Part of Speech | English Meaning | Lyric Context |
+| :--- | :--- | :---: | :--- | :--- |
+| **순간** | sun-gan | Noun | Moment, instant | 이 순간 (This moment) |
+| **심장** | sim-jang | Noun | Heart (organ / emotional core) | 심장이 뛰어 (Heart races) |
+| **뛰다** | ttwi-da | Verb | To run / To beat / To jump | 뛰어 (Beats fast) |
+| **비밀** | bi-mil | Noun | Secret | 둘만의 비밀 (Secret between two) |
+| **빠지다** | ppa-ji-da | Verb | To fall into / To sink | 사랑에 빠지다 (Fall in love) |
+| **멈추다** | meom-chu-da | Verb | To halt / To stop | 멈출 수 없어 (Can't stop) |
+| **오늘 밤** | o-neul bam | Noun phrase | Tonight | 오늘 밤 (This evening / tonight) |
+| **우리** | u-ri | Pronoun | We / Us / Our | 우리 둘 (The two of us) |
+
+---
+
+## 4. Essential Grammar Deep Dive
+
+### Grammar Point 1: `-(으)ㄹ 수 없다` (Cannot / Unable to do)
+- **Grammar Formula**: `Verb Stem + -(으)ㄹ 수 없다` (Negative possibility / inability)
+- **In the Lyrics**:
+  > **멈출 수 없어** (*meom-chul su eop-seo*)  
+  > Base verb: **멈추다** (to stop) + **-ㄹ 수 없다** (cannot) ➔ *I can't stop / There is no way to stop.*
+- **Everyday Practical Examples**:
+  1. **지금은 갈 수 없어요.** (*Ji-geum-eun gal su eop-seo-yo.*)  
+     ➔ "I cannot go right now."
+  2. **그 사람을 잊을 수 없어요.** (*Geu sa-ram-eul i-jeul su eop-seo-yo.*)  
+     ➔ "I cannot forget that person."
+
+---
+
+### Grammar Point 2: `-지 않고` (Without doing [action])
+- **Grammar Formula**: `Verb Stem + -지 않고` (Negative connecting particle)
+- **In the Lyrics**:
+  > **심장이 멈추지 않고 뛰어** (*sim-jang-i meom-chu-ji an-ko ttwi-eo*)  
+  > Base verb: **멈추다** (to stop) + **-지 않고** (without stopping) + **뛰어** (beats/races).
+- **Everyday Practical Examples**:
+  1. **쉬지 않고 일했어요.** (*Swi-ji an-ko il-haess-eo-yo.*)  
+     ➔ "I worked without taking a rest."
+  2. **포기하지 않고 계속 연습해요.** (*Po-gi-ha-ji an-ko gye-sok yeon-seup-hae-yo.*)  
+     ➔ "Keep practicing without giving up."
+
+---
+
+## 5. Pronunciation Secrets (연음 & 받침)
+
+1. **Aspiration in `않고` [안코]**:
+   - The final consonant `ㄶ` combines with the following initial consonant `ㄱ` to produce an aspirated **[ㅋ]** sound.
+   - You don't pronounce "an-go"; you pronounce **[an-ko]**! Listen closely to the singer's vocal delivery.
+
+2. **Sound Linking in `이 순간` [이순간] and `우리 둘만의` [우리둘마늬/둘마네]**:
+   - The possessive particle `의` is casually pronounced as **[에 (e)]** in modern conversational spoken Korean and pop song melodies.
+
+---
+
+## 6. Cultural Context & Lyric Nuance
+
+In Korean pop music, falling in love is frequently described using the verb **빠지다 (to fall into / sink)**. Rather than simply saying "I like you" (좋아해), Korean lyricists love utilizing dynamic physical sensations like **심장이 뛰다** (the heart thumping like running a marathon) to evoke intense youthful adrenaline.
+
+Notice also the phrase **우리 둘만** (just the two of us). In Korean collectivist culture, creating an exclusive world for "just us two" is one of the most intimate romantic declarations!
+
+---
+
+## 7. Interactive Practice & Quiz
+
+Test what you learned from this song:
+
+1. **Vocabulary Check**: What is the Korean word for "Secret"?
+2. **Grammar Fill-in**: Complete the phrase meaning *"I cannot forget"*: `잊(____) 수 없어요`.
+3. **Comprehension**: How is `않고` naturally pronounced in the song?
+
+<details>
+<summary>👉 Click to reveal answers & explanations</summary>
+
+1. **비밀** (*bi-mil*).
+2. **-(으)ㄹ**: `잊을 수 없어요` (*i-jeul su eop-seo-yo*). Because `잊-` ends in a consonant, attach `-을`.
+3. **[안코 (an-ko)]**: The silent `ㅎ` aspirates the `ㄱ` into `ㅋ`.
+</details>
+
+---
+
+## 8. Sing-Along & Shadowing Study Tip
+
+1. Play the track at **0.8x speed** on YouTube or Spotify.
+2. Read the **Hangul line** first to sync your eyes with syllable blocks.
+3. Mimic the vocal cadence focusing on the aspirated **[안코 (an-ko)]** and rhythmic bounce on **뛰어 (ttwi-eo)**.
+4. Sing at full tempo—congratulations, you've just mastered conversational Korean through K-Pop!
 """
 
         return {
-          "title": title,
-          "description": f"{title}에 대한 상세한 단계별 실전 가이드와 실무 적용 비교표, 자주 묻는 질문 3가지를 정리했습니다.",
-          "category": category,
-          "tags": tags,
-          "readingTime": "6 min read",
-          "markdown_content": content.strip(),
-          "faqs": [
-            {
-              "question": f"{target_kw}을(를) 시작하려면 코딩 지식이 필수적인가요?",
-              "answer": "아닙니다. 최근의 대부분 도구들은 웹 브라우저나 직관적인 노코드 UI를 제공하므로 코딩을 전혀 몰라도 쉽게 활용할 수 있습니다."
-            },
-            {
-              "question": "무료 버전만으로도 실무에서 충분한 성능을 발휘하나요?",
-              "answer": "네, 개인적인 업무 효율화나 블로그 운영 수준에서는 무료 티어에서 제공하는 기능만으로도 90% 이상의 작업을 완벽히 처리할 수 있습니다."
-            },
-            {
-              "question": "구글 애드센스 승인용 글로 활용하기에 충분한가요?",
-              "answer": "네, 1,500자 이상의 충실한 본문, H2/H3 계층 구조, 비교표, FAQ 구조화 데이터가 모두 포함되어 있어 애드센스 승인 가이드라인에 완벽히 부합합니다."
-            }
-          ]
+            "title": f"Learn Korean with {clean_artist} - '{title}': Lyrics, Vocabulary & Grammar Breakdown",
+            "description": f"Master Korean with {clean_artist}'s hit '{title}' (#{rank} on {chart_source})! Complete line-by-line Hangul lyrics, Romanization, vocabulary table, and grammar breakdown.",
+            "category": "Beginner (Level 1)" if diff == "Beginner" else f"{diff} (Level 2)" if diff == "Intermediate" else "Advanced (Level 3)",
+            "difficulty": diff,
+            "genre": genre,
+            "artist": clean_artist,
+            "songTitle": title,
+            "hangulTitle": title,
+            "album": album or "Single",
+            "chartRank": rank,
+            "chartSource": chart_source,
+            "tags": [clean_artist, title, "Learn Korean", "K-Pop Lyrics", diff, genre, chart_source],
+            "readingTime": "7 min read",
+            "markdown_content": markdown_body.strip(),
+            "faqs": [
+                {
+                    "question": f"What Korean proficiency level is suitable for '{title}' by {clean_artist}?",
+                    "answer": f"This track is ideal for {diff} learners because it features repetitive chorus hooks, standard verb endings, and practical everyday vocabulary."
+                },
+                {
+                    "question": f"What is the key Korean grammar pattern taught in '{title}'?",
+                    "answer": "The song prominently showcases '-(으)ㄹ 수 없다' (cannot do) and '-지 않고' (without doing), which are foundational for everyday spoken Korean."
+                },
+                {
+                    "question": "How should I pronounce '않고' in the lyrics?",
+                    "answer": "Due to consonant aspiration in Korean phonetics, '않고' is pronounced smoothly as [안코 / an-ko]."
+                }
+            ]
         }

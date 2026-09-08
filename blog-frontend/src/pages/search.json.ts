@@ -1,5 +1,5 @@
 import { getCollection } from 'astro:content';
-import { getCategorySlug, getTagSlug } from '../utils/slug';
+import { getCategorySlug, getDifficultySlug, getGenreSlug, getArtistSlug } from '../utils/slug';
 
 export async function GET() {
   const posts = await getCollection('blog', ({ data }) => {
@@ -12,15 +12,25 @@ export async function GET() {
       title: post.data.title,
       description: post.data.description,
       slug: post.slug,
-      category: post.data.category || 'General',
-      categorySlug: getCategorySlug(post.data.category || 'General'),
+      category: post.data.category || 'Beginner (Level 1)',
+      categorySlug: getCategorySlug(post.data.category || ''),
+      difficulty: post.data.difficulty || 'Beginner',
+      difficultySlug: getDifficultySlug(post.data.difficulty || ''),
+      genre: post.data.genre || 'Dance & Pop',
+      genreSlug: getGenreSlug(post.data.genre || ''),
+      artist: post.data.artist || 'Various Artists',
+      artistSlug: getArtistSlug(post.data.artist || ''),
+      songTitle: post.data.songTitle || '',
+      hangulTitle: post.data.hangulTitle || '',
+      chartRank: post.data.chartRank,
+      chartSource: post.data.chartSource || 'Melon Top 100',
       tags: post.data.tags || [],
-      pubDate: new Intl.DateTimeFormat('ko-KR', {
+      pubDate: new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
       }).format(post.data.pubDate),
-      readingTime: post.data.readingTime || '5 min read',
+      readingTime: post.data.readingTime || '6 min read',
     }));
 
   return new Response(JSON.stringify(searchData), {
@@ -30,3 +40,4 @@ export async function GET() {
     },
   });
 }
+

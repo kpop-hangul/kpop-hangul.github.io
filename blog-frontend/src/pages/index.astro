@@ -1,11 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Card from '../components/Card.astro';
-import ThumbnailCard from '../components/ThumbnailCard.astro';
 import AdSense from '../components/AdSense.astro';
 import { getCollection } from 'astro:content';
-import { getPostSummary } from '../utils/summary';
-import { getDynamicCategories } from '../utils/categories';
+import { getDifficultyStats, getGenreStats, getArtistStats } from '../utils/kpop';
+import siteConfig from '../config/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -14,176 +13,249 @@ const allPosts = await getCollection('blog', ({ data }) => {
 });
 
 const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const recentPosts = sortedPosts.slice(0, 12);
+const recentPosts = sortedPosts.slice(0, 9);
+const featuredPosts = sortedPosts.slice(0, 3);
 
-const { primaryCategories, secondaryCategories } = await getDynamicCategories(3);
-
-const categories = [
-  { name: '전체 글', href: `${base}/blog/` },
-  { name: '갤러리', href: `${base}/gallery/` },
-  ...primaryCategories.map(c => ({ name: c.name, href: c.href })),
-  ...(secondaryCategories.length > 0 ? [{ name: `기타 (+${secondaryCategories.length})`, href: `${base}/categories/` }] : []),
-];
+const difficulties = await getDifficultyStats();
+const genres = await getGenreStats();
+const artists = await getArtistStats();
 ---
 
 <BaseLayout
-  title="앱시안(absian) - AI 도구 & 실전 자동화 테크"
-  description="AI 생산성 도구, 실전 개발 팁, 자동화 부업 파이프라인 및 최신 테크 트렌드 전문 블로그"
+  title={`${siteConfig.site.name} - Master Korean with K-Pop Song Lyrics`}
+  description={siteConfig.site.description}
 >
-  <section class="bg-gradient-to-b from-blue-50/70 via-slate-50 to-slate-50 border-b border-slate-200/60 py-16 sm:py-24">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/80 text-blue-700 text-xs font-semibold mb-6">
-        <span>✨ 2026 최신 AI & 스마트 자동화 테크 매거진</span>
+  <!-- 1. Hero Section -->
+  <section class="relative bg-gradient-to-b from-indigo-900 via-slate-900 to-slate-950 text-white overflow-hidden py-16 sm:py-24 border-b border-indigo-900/50">
+    <div class="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <!-- Tagline pill -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold mb-6">
+        <span>🏆 Updated Daily from Melon & Spotify Top Charts</span>
       </div>
-      <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto mb-6">
-        일상을 혁신하는 <span class="text-blue-600">AI 도구</span>와 <br class="hidden sm:inline" />실전 자동화 테크 가이드
+
+      <!-- Main Headline -->
+      <h1 class="text-3xl sm:text-6xl font-black tracking-tight leading-tight max-w-4xl mx-auto mb-6">
+        Learn Korean with <br class="hidden sm:inline" />
+        <span class="bg-gradient-to-r from-indigo-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+          Chart-Topping K-Pop Hits
+        </span>
       </h1>
-      <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
-        검증된 개발 팁부터 무자본 디지털 노마드 부업 전략까지, 생산성을 극대화하는 실질적인 인사이트를 제공합니다.
+
+      <!-- Subtitle -->
+      <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8">
+        Sing your favorite songs with 100% understanding! Detailed line-by-line Hangul lyrics, accurate Romanization, essential vocabulary tables, and grammar breakdowns.
       </p>
-      
-      <div class="flex flex-wrap items-center justify-center gap-2">
-        {categories.map(cat => (
-          <a
-            href={cat.href}
-            class="px-4 py-2 bg-white hover:bg-blue-600 hover:text-white text-slate-700 font-medium text-xs rounded-xl border border-slate-200 shadow-sm transition-all"
-          >
-            {cat.name}
-          </a>
-        ))}
+
+      <!-- Quick Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
+        <a
+          href={`${base}/difficulty/`}
+          class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
+        >
+          <span>🎯 Choose Your Level</span>
+          <span>→</span>
+        </a>
+        <a
+          href={`${base}/search/`}
+          class="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
+        >
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span>Search Any Song or Artist</span>
+        </a>
+      </div>
+
+      <!-- 3 Difficulty Level Quick Links -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <a
+          href={`${base}/difficulty/beginner/`}
+          class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-emerald-500/30 text-left transition-all group"
+        >
+          <div class="text-xs font-bold text-emerald-400 mb-1 flex items-center justify-between">
+            <span>🟢 Level 1</span>
+            <span class="text-[10px] text-slate-400">TOPIK I</span>
+          </div>
+          <div class="text-sm font-bold text-white group-hover:text-emerald-300">Beginner</div>
+          <div class="text-[11px] text-slate-400 mt-1">Catchy hooks & core words</div>
+        </a>
+
+        <a
+          href={`${base}/difficulty/intermediate/`}
+          class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-amber-500/30 text-left transition-all group"
+        >
+          <div class="text-xs font-bold text-amber-400 mb-1 flex items-center justify-between">
+            <span>🟡 Level 2</span>
+            <span class="text-[10px] text-slate-400">TOPIK II</span>
+          </div>
+          <div class="text-sm font-bold text-white group-hover:text-amber-300">Intermediate</div>
+          <div class="text-[11px] text-slate-400 mt-1">Conversations & idioms</div>
+        </a>
+
+        <a
+          href={`${base}/difficulty/advanced/`}
+          class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-rose-500/30 text-left transition-all group"
+        >
+          <div class="text-xs font-bold text-rose-400 mb-1 flex items-center justify-between">
+            <span>🔴 Level 3</span>
+            <span class="text-[10px] text-slate-400">TOPIK II+</span>
+          </div>
+          <div class="text-sm font-bold text-white group-hover:text-rose-300">Advanced</div>
+          <div class="text-[11px] text-slate-400 mt-1">Fast rap & poetic lyrics</div>
+        </a>
       </div>
     </div>
   </section>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <AdSense slotId="1234567890" type="top-banner" />
-  </div>
-
+  <!-- 2. Daily Top Chart Feature Section -->
   <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Header with View Switcher -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
       <div>
-        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">최신 아티클</h2>
-        <p class="text-sm text-slate-500 mt-1">에이전트가 엄선한 고품질 테크 & 생산성 가이드</p>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 mb-2">
+          🔥 Today's Top 3 Chart Hits
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          Fresh From Melon & Spotify
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">
+          3 new songs analyzed and added every morning.
+        </p>
       </div>
 
-      <div class="flex items-center gap-3 self-start sm:self-auto">
-        <!-- View Switcher Tabs -->
-        <div class="inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600">
-          <button
-            id="home-btn-feed"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs transition-all cursor-pointer"
-            title="피드형 (상세 요약)"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            <span>피드형</span>
-          </button>
-          <button
-            id="home-btn-grid"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all cursor-pointer"
-            title="썸네일 모아보기"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-            <span>🖼️ 썸네일형</span>
-          </button>
-        </div>
+      <a
+        href={`${base}/blog/`}
+        class="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+      >
+        View All Songs ({allPosts.length}) →
+      </a>
+    </div>
 
-        <a href={`${base}/blog/`} class="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">
-          전체보기 →
+    <!-- 3 Featured Song Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      {featuredPosts.map(post => (
+        <Card
+          title={post.data.title}
+          description={post.data.description}
+          pubDate={post.data.pubDate}
+          slug={post.slug}
+          category={post.data.category}
+          difficulty={post.data.difficulty}
+          genre={post.data.genre}
+          artist={post.data.artist}
+          songTitle={post.data.songTitle}
+          hangulTitle={post.data.hangulTitle}
+          chartRank={post.data.chartRank}
+          chartSource={post.data.chartSource}
+          readingTime={post.data.readingTime}
+          heroImage={post.data.heroImage}
+          tags={post.data.tags}
+        />
+      ))}
+    </div>
+
+    <!-- Music Genres Quick Filter Bar -->
+    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200/80 mb-16">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+        Filter by Music Genre
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a
+          href={`${base}/blog/`}
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow-2xs"
+        >
+          All Genres
         </a>
+        {genres.map(g => (
+          <a
+            href={g.href}
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 border border-slate-200 transition-colors"
+          >
+            {g.name} <span class="text-[10px] text-slate-400 ml-1">({g.count})</span>
+          </a>
+        ))}
       </div>
     </div>
 
-    {recentPosts.length > 0 ? (
-      <>
-        <!-- 1. 카드 피드 뷰 (3열, 텍스트 중심) -->
-        <div id="home-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recentPosts.map(post => (
+    <!-- All Recent Song Lessons -->
+    {recentPosts.length > 3 && (
+      <div>
+        <div class="mb-6">
+          <h3 class="text-xl font-bold text-slate-900 tracking-tight">
+            Latest Korean Song Lessons
+          </h3>
+          <p class="text-xs text-slate-500 mt-1">Explore recently analyzed tracks</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {recentPosts.slice(3).map(post => (
             <Card
               title={post.data.title}
               description={post.data.description}
               pubDate={post.data.pubDate}
               slug={post.slug}
               category={post.data.category}
+              difficulty={post.data.difficulty}
+              genre={post.data.genre}
+              artist={post.data.artist}
+              songTitle={post.data.songTitle}
+              hangulTitle={post.data.hangulTitle}
+              chartRank={post.data.chartRank}
+              chartSource={post.data.chartSource}
               readingTime={post.data.readingTime}
               heroImage={post.data.heroImage}
               tags={post.data.tags}
             />
           ))}
         </div>
-
-        <!-- 2. 컴팩트 썸네일 그리드 뷰 (4열, 썸네일 중심) -->
-        <div id="home-grid-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          {recentPosts.map(post => (
-            <ThumbnailCard
-              title={post.data.title}
-              summary={getPostSummary(post)}
-              description={post.data.description}
-              slug={post.slug}
-              category={post.data.category}
-              pubDate={post.data.pubDate}
-              readingTime={post.data.readingTime}
-              heroImage={post.data.heroImage}
-            />
-          ))}
-        </div>
-      </>
-    ) : (
-      <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
-        <p class="text-slate-500 text-sm">아직 등록된 포스트가 없습니다. 에이전트를 실행하여 첫 글을 발행해보세요!</p>
       </div>
     )}
 
-    <div class="mt-12">
-      <AdSense slotId="3456789012" type="multiplex" />
-    </div>
+    <!-- Why Learn Korean with K-Pop Section -->
+    <section class="mt-20 pt-16 border-t border-slate-200">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+          Why Learn Korean with K-Pop?
+        </h2>
+        <p class="text-sm text-slate-600">
+          Traditional textbooks teach stiff formal language. K-Pop songs teach natural, emotional, and memorable spoken Korean.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-2xl mb-3">🎧</div>
+          <h3 class="text-base font-bold text-slate-900 mb-1">Authentic Spoken Korean</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Learn real colloquial expressions, modern youth slang, and natural sentence endings used in daily Seoul conversations.
+          </p>
+        </div>
+
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-2xl mb-3">🧠</div>
+          <h3 class="text-base font-bold text-slate-900 mb-1">Rhythmic Memory Recall</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Catchy melodies and repetitive hooks anchor vocabulary in long-term memory effortlessly without boring flashcard drills.
+          </p>
+        </div>
+
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-2xl mb-3">🗣️</div>
+          <h3 class="text-base font-bold text-slate-900 mb-1">Shadowing & Pronunciation</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Singing along naturally trains your vocal muscles for native batchim linking (연음) and smooth Korean consonant transitions.
+          </p>
+        </div>
+
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-2xl mb-3">📅</div>
+          <h3 class="text-base font-bold text-slate-900 mb-1">Daily Top 3 Consistency</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            New chart hits added every day keep your study sessions fresh, trendy, and tied directly to the songs you already love.
+          </p>
+        </div>
+      </div>
+    </section>
   </section>
-
-  <script is:inline>
-    (function () {
-      const feedBtn = document.getElementById('home-btn-feed');
-      const gridBtn = document.getElementById('home-btn-grid');
-      const feedContainer = document.getElementById('home-feed-container');
-      const gridContainer = document.getElementById('home-grid-container');
-
-      if (!feedBtn || !gridBtn || !feedContainer || !gridContainer) return;
-
-      function setView(mode) {
-        if (mode === 'grid') {
-          feedContainer.classList.add('hidden');
-          gridContainer.classList.remove('hidden');
-
-          gridBtn.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
-          gridBtn.classList.remove('text-slate-500');
-
-          feedBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
-          feedBtn.classList.add('text-slate-500');
-          localStorage.setItem('absian_view_mode', 'grid');
-        } else {
-          gridContainer.classList.add('hidden');
-          feedContainer.classList.remove('hidden');
-
-          feedBtn.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
-          feedBtn.classList.remove('text-slate-500');
-
-          gridBtn.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
-          gridBtn.classList.add('text-slate-500');
-          localStorage.setItem('absian_view_mode', 'feed');
-        }
-      }
-
-      feedBtn.addEventListener('click', () => setView('feed'));
-      gridBtn.addEventListener('click', () => setView('grid'));
-
-      // 로컬스토리지에 저장된 사용자 선호 모드 동기화
-      const savedMode = localStorage.getItem('absian_view_mode');
-      if (savedMode === 'grid') {
-        setView('grid');
-      }
-    })();
-  </script>
 </BaseLayout>

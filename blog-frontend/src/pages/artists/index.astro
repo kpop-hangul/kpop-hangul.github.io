@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getArtistStats } from '../../utils/kpop';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const artists = await getArtistStats();
+---
+
+<BaseLayout
+  title="K-Pop Artists Directory | Learn Korean with K-Pop Hits"
+  description="Find Korean learning song lessons by your favorite K-Pop artists, idol groups, and soloists."
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200/60 mb-3">
+        🎤 K-Pop Artists & Idols
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
+        Artists Directory
+      </h1>
+      <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+        Learn Korean with the songs of your ultimate biases. Select any idol group or soloist below to see all available lyric breakdowns.
+      </p>
+    </div>
+
+    {artists.length > 0 ? (
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {artists.map(a => (
+          <a
+            href={a.href}
+            class="bg-white rounded-2xl border border-slate-200/80 p-5 text-center shadow-2xs hover:shadow-md hover:border-indigo-400 transition-all group flex flex-col items-center"
+          >
+            <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-xl flex items-center justify-center mb-3 shadow-sm group-hover:scale-105 transition-transform">
+              {a.name.charAt(0).toUpperCase()}
+            </div>
+            <h2 class="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+              {a.name}
+            </h2>
+            <span class="text-[11px] font-medium text-slate-400 mt-1">
+              {a.count} lesson{a.count !== 1 ? 's' : ''}
+            </span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
+        <div class="text-4xl mb-3">🎤</div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">No artists loaded yet</h3>
+        <p class="text-slate-500 text-sm">Our daily chart harvester will populate songs and artists automatically.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

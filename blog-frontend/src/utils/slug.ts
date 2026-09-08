@@ -1,46 +1,117 @@
 /**
- * URL Slug and Category Helper Functions for 100% 404-Free GitHub Pages Navigation
+ * URL Slug and Category Helper Functions for K-Pop Korean Learning Blog
  */
 
-export function getCategorySlug(category: string = ''): string {
-  const normalized = category.trim().toLowerCase();
-  
-  // 1. 대표 카테고리 매핑
-  if (normalized.includes('ai') || normalized.includes('생산성') || normalized.includes('productivity')) {
-    return 'ai-productivity';
-  }
-  if (normalized.includes('개발') || normalized.includes('테크') || normalized.includes('dev') || normalized.includes('tech')) {
-    return 'tech-dev';
-  }
-  if (normalized.includes('부업') || normalized.includes('재테크') || normalized.includes('income')) {
-    return 'side-income';
-  }
-  if (normalized.includes('마케팅') || normalized.includes('marketing')) {
-    return 'marketing';
-  }
-  if (normalized.includes('클라우드') || normalized.includes('인프라') || normalized.includes('cloud')) {
-    return 'cloud-infra';
-  }
+// 1. Difficulty Level Slugs & Names
+export function getDifficultySlug(difficulty: string = ''): string {
+  const norm = difficulty.trim().toLowerCase();
+  if (norm.includes('begin') || norm.includes('level 1') || norm.includes('초급')) return 'beginner';
+  if (norm.includes('inter') || norm.includes('level 2') || norm.includes('중급')) return 'intermediate';
+  if (norm.includes('adv') || norm.includes('level 3') || norm.includes('고급')) return 'advanced';
+  return 'beginner';
+}
 
-  // 2. 신규/기타 카테고리 (한글 및 영문 지원)
-  const slugified = normalized
+export function getDifficultyName(slugOrName: string = ''): string {
+  const slug = getDifficultySlug(slugOrName);
+  const map: Record<string, { name: string; level: string; badge: string; desc: string }> = {
+    beginner: {
+      name: 'Beginner (Level 1)',
+      level: 'Level 1',
+      badge: '🟢 Beginner',
+      desc: 'Basic Hangul, repetitive catchy chorus lines, everyday vocabulary & simple grammar patterns.',
+    },
+    intermediate: {
+      name: 'Intermediate (Level 2)',
+      level: 'Level 2',
+      badge: '🟡 Intermediate',
+      desc: 'Conversational phrases, idiomatic expressions, verb conjugations & emotional lyrics.',
+    },
+    advanced: {
+      name: 'Advanced (Level 3)',
+      level: 'Level 3',
+      badge: '🔴 Advanced',
+      desc: 'Fast rap bars, complex metaphorical expressions, wordplay & nuanced poetic Korean.',
+    },
+  };
+  return map[slug]?.name || 'Beginner (Level 1)';
+}
+
+// 2. Genre Slugs & Names
+export function getGenreSlug(genre: string = ''): string {
+  const norm = genre.trim().toLowerCase();
+  if (norm.includes('dance') || norm.includes('pop')) return 'dance-pop';
+  if (norm.includes('r&b') || norm.includes('rnb') || norm.includes('soul')) return 'rnb-soul';
+  if (norm.includes('hip') || norm.includes('rap')) return 'hip-hop';
+  if (norm.includes('ballad') || norm.includes('ost')) return 'ballad-ost';
+  if (norm.includes('rock') || norm.includes('band')) return 'rock-band';
+  if (norm.includes('indie') || norm.includes('acoustic')) return 'indie-acoustic';
+
+  return norm
+    .replace(/&/g, 'and')
+    .replace(/[\s\/\\]+/g, '-')
+    .replace(/[^\w-]/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'dance-pop';
+}
+
+export function getGenreName(slug: string, fallback: string = ''): string {
+  const map: Record<string, string> = {
+    'dance-pop': 'Dance & Pop',
+    'rnb-soul': 'R&B & Soul',
+    'hip-hop': 'Hip-Hop & Rap',
+    'ballad-ost': 'Ballad & OST',
+    'rock-band': 'Rock & Band',
+    'indie-acoustic': 'Indie & Acoustic',
+  };
+  if (map[slug]) return map[slug];
+  if (fallback && fallback.trim()) return fallback.trim();
+  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+// 3. Artist Slugs & Names
+export function getArtistSlug(artist: string = ''): string {
+  return artist
+    .trim()
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)/g, '') // remove brackets like (빅뱅)
     .replace(/&/g, 'and')
     .replace(/[\s\/\\]+/g, '-')
     .replace(/[^\w\uAC00-\uD7A3-]/g, '')
     .replace(/--+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/^-+|-+$/g, '') || 'various-artists';
+}
 
-  return slugified || 'general';
+// 4. General Category Slugs & Names
+export function getCategorySlug(category: string = ''): string {
+  const norm = category.trim().toLowerCase();
+  if (norm.includes('begin') || norm.includes('level 1')) return 'beginner';
+  if (norm.includes('inter') || norm.includes('level 2')) return 'intermediate';
+  if (norm.includes('adv') || norm.includes('level 3')) return 'advanced';
+  if (norm.includes('dance') || norm.includes('pop')) return 'dance-pop';
+  if (norm.includes('r&b') || norm.includes('rnb') || norm.includes('soul')) return 'rnb-soul';
+  if (norm.includes('hip') || norm.includes('rap')) return 'hip-hop';
+  if (norm.includes('ballad') || norm.includes('ost')) return 'ballad-ost';
+  if (norm.includes('rock') || norm.includes('band')) return 'rock-band';
+
+  return norm
+    .replace(/&/g, 'and')
+    .replace(/[\s\/\\]+/g, '-')
+    .replace(/[^\w\uAC00-\uD7A3-]/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'general';
 }
 
 export function getCategoryName(slug: string, fallbackName: string = ''): string {
   const map: Record<string, string> = {
-    'ai-productivity': 'AI & 생산성',
-    'tech-dev': '개발 & 테크',
-    'side-income': '스마트 부업',
-    'marketing': '마케팅 & 브랜딩',
-    'cloud-infra': '클라우드 & 인프라',
-    'general': '일반 테크',
+    'beginner': 'Beginner (Level 1)',
+    'intermediate': 'Intermediate (Level 2)',
+    'advanced': 'Advanced (Level 3)',
+    'dance-pop': 'Dance & Pop',
+    'rnb-soul': 'R&B & Soul',
+    'hip-hop': 'Hip-Hop & Rap',
+    'ballad-ost': 'Ballad & OST',
+    'rock-band': 'Rock & Band',
+    'indie-acoustic': 'Indie & Acoustic',
   };
   if (map[slug]) return map[slug];
   if (fallbackName && fallbackName.trim()) return fallbackName.trim();
@@ -55,5 +126,6 @@ export function getTagSlug(tag: string = ''): string {
     .replace(/[\s\/\\]+/g, '-')
     .replace(/[^\w\uAC00-\uD7A3-]/g, '')
     .replace(/--+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'tag';
+    .replace(/^-+|-+$/g, '') || 'kpop';
 }
+

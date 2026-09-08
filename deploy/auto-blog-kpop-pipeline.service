@@ -1,0 +1,16 @@
+[Unit]
+Description=K-Pop Hangul - Daily 3-Song Learning Generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ian/BLOG/kpop-hangul-blog/automation-pipeline
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/home/ian/BLOG/kpop-hangul-blog/.env
+ExecStart=/home/ian/BLOG/kpop-hangul-blog/automation-pipeline/venv/bin/python3 daily_kpop_pipeline.py --count 3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

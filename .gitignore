@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / Astro
+node_modules
+node_modules/
+dist/
+.astro/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+venv
+venv/
+*/venv
+
+# Secrets / Local environments
+.env
+.env.local
+*/.env
