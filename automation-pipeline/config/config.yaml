@@ -64,11 +64,11 @@ agent:
   temperature: 0.7
   max_output_tokens: 8192
 
-# 6. Telegram Bot (Disabled per setup constraints)
+# 6. Telegram Bot
 telegram:
-  enabled: false
+  enabled: true
   bot_token: ""
-  chat_id: ""
+  chat_id: "5017406279"
 
 # 7. Deployment & Paths
 github:

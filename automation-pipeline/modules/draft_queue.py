@@ -12,7 +12,13 @@ class DraftApprovalQueue:
 
     def __init__(self, queue_file: Optional[str] = None):
         if queue_file:
-            self.queue_file = os.path.abspath(queue_file)
+            path = os.path.abspath(queue_file)
+            if os.path.isdir(path):
+                candidate1 = os.path.join(path, "automation-pipeline", "data", "draft_queue.json")
+                candidate2 = os.path.join(path, "data", "draft_queue.json")
+                self.queue_file = candidate1 if os.path.exists(os.path.dirname(candidate1)) else candidate2
+            else:
+                self.queue_file = path
         else:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             self.queue_file = os.path.join(base_dir, "data", "draft_queue.json")

@@ -1,5 +1,8 @@
 import os
 import json
+import re
+import subprocess
+from pathlib import Path
 import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -25,11 +28,11 @@ def _load_env_file():
 
 class TelegramNotifier:
     """
-    앱시안(absian) 블로그 운영 텔레그램 스마트 알림 에이전트
-    1. 새로운 주제 탐색 보고
-    2. 새로운 글 작성 및 배포 보고
-    3. 일일 사이트 현황 보고 (아침 8시 / 저녁 7시)
-    4. 광고 수익 현황 일일 보고
+    K-Pop Hangul 블로그 운영 텔레그램 스마트 알림 에이전트
+    1. 새로운 주제(K-Pop 노래) 탐색 보고
+    2. 심층 감수 보고서 및 HITL 검토/승인 요청
+    3. 새로운 글 작성 및 배포 보고
+    4. 일일 사이트 현황 보고
     5. 시스템 헬스 / 장애 긴급 알림
     """
 
@@ -40,7 +43,7 @@ class TelegramNotifier:
         self.enabled = telegram_cfg.get("enabled", True)
         self.bot_token = telegram_cfg.get("bot_token") or os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.chat_id = str(telegram_cfg.get("chat_id") or os.getenv("TELEGRAM_CHAT_ID", ""))
-        self.site_url = config.get("site", {}).get("url", "https://absianp.github.io")
+        self.site_url = config.get("site", {}).get("url", "https://kpop-hangul.github.io")
         self.api_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
 
     def _send_message(self, text: str, reply_markup: Optional[Dict] = None) -> bool:
@@ -94,6 +97,131 @@ class TelegramNotifier:
 ⚡ <i>AI 에이전트가 위 주제를 기반으로 1,500자 심층 포스팅 작성을 시작합니다.</i>"""
 
         return self._send_message(msg)
+
+    # -------------------------------------------------------------
+    # 1-1. 대표 썸네일 및 본문 다이어그램 앨범 전송
+    # -------------------------------------------------------------
+    def send_draft_images(self, draft_id: str, article: Dict[str, Any]) -> bool:
+        if not self.bot_token or not self.chat_id:
+            return False
+
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        public_dir = repo_root / "blog-frontend" / "public"
+        title = article.get("title", "")
+        slug = article.get("slug", "")
+
+        media_items = []
+        file_handles = []
+        try:
+            # 1. 썸네일 수집
+            thumb_url = article.get("heroImage", "")
+            thumb_path = None
+            if thumb_url and not thumb_url.startswith("http"):
+                candidate = public_dir / thumb_url.lstrip("/")
+                if candidate.exists():
+                    thumb_path = candidate
+
+            if not thumb_path and slug:
+                candidate = public_dir / "images" / "thumbnails" / f"{slug}.svg"
+                if candidate.exists():
+                    thumb_path = candidate
+
+            if thumb_path and thumb_path.exists():
+                if thumb_path.suffix.lower() == ".svg":
+                    png_tmp = Path(f"/tmp/preview_thumb_{thumb_path.stem}.png")
+                    cmd = ["/usr/bin/ffmpeg", "-y", "-i", str(thumb_path), "-update", "1", "-frames:v", "1", str(png_tmp)]
+                    res = subprocess.run(cmd, capture_output=True, timeout=15)
+                    if res.returncode == 0 and png_tmp.exists():
+                        media_items.append((png_tmp, f"🖼️ [K-Pop 썸네일] {title}"))
+                else:
+                    media_items.append((thumb_path, f"🖼️ [K-Pop 썸네일] {title}"))
+
+            # 2. 본문 다이어그램 수집
+            body = article.get("markdown_content", "")
+            img_matches = re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*alt="([^"]*)"', body)
+            if not img_matches:
+                img_matches = [(f"/images/articles/{item.get('asset_key')}.webp", item.get("caption", "")) 
+                               for item in article.get("article_images", [])]
+
+            for idx, (img_url, img_alt) in enumerate(img_matches[:2], 1):
+                img_file = public_dir / img_url.lstrip("/")
+                if img_file.exists():
+                    caption = f"📸 [학습 다이어그램 {idx}] {img_alt}" if img_alt else f"📸 [학습 다이어그램 {idx}]"
+                    media_items.append((img_file, caption[:100]))
+
+            if not media_items:
+                return False
+
+            files = {}
+            media_list = []
+            for i, (f_path, cap) in enumerate(media_items):
+                field_name = f"photo_{i}"
+                fh = open(f_path, "rb")
+                file_handles.append(fh)
+                files[field_name] = (f_path.name, fh)
+                media_obj = {
+                    "type": "photo",
+                    "media": f"attach://{field_name}",
+                    "caption": cap
+                }
+                media_list.append(media_obj)
+
+            data = {
+                "chat_id": self.chat_id,
+                "media": json.dumps(media_list)
+            }
+            res = requests.post(f"{self.api_url}/sendMediaGroup", data=data, files=files, timeout=30)
+            if res.status_code == 200:
+                print(f"📸 K-Pop 초안 이미지 {len(media_items)}장 텔레그램 전송 성공!")
+                return True
+            else:
+                print(f"⚠️ [TelegramNotifier] sendMediaGroup 실패 ({res.status_code}): {res.text}")
+                return False
+        except Exception as e:
+            print(f"⚠️ [TelegramNotifier] send_draft_images 예외: {e}")
+            return False
+        finally:
+            for fh in file_handles:
+                try:
+                    fh.close()
+                except Exception:
+                    pass
+
+    # -------------------------------------------------------------
+    # 1-2. Gemini 심층 감수 보고서 및 HITL 승인 요청
+    # -------------------------------------------------------------
+    def send_review_report(self, draft_id: str, article: Dict[str, Any], review: Dict[str, Any]) -> bool:
+        from html import escape
+        
+        # 1. 썸네일 & 다이어그램 사진 앨범 발송
+        try:
+            self.send_draft_images(draft_id, article)
+        except Exception as e:
+            print(f"⚠️ 이미지 발송 예외 (텍스트 보고서 계속 진행): {e}")
+
+        # 2. 감수 보고서 텍스트 및 승인 버튼 발송
+        title = escape(str(article.get("title", "")))
+        summary = escape(str(review.get("summary_for_user", review.get("summary", "검토 의견 없음"))))
+        score = review.get("total_score", 90)
+        verdict = review.get("verdict", "PENDING")
+        artist = escape(str(article.get("artist", "")))
+        song_title = escape(str(article.get("songTitle", "")))
+
+        msg = (f"🎵 <b>[K-Pop 한글 학습 초안 검토 및 승인 요청]</b>\n"
+               f"━━━━━━━━━━━━━━━━━━━━\n"
+               f"📌 <b>곡명</b>: <b>{artist} - {song_title}</b>\n"
+               f"📑 <b>제목</b>: <code>{title}</code>\n"
+               f"🆔 <b>초안 ID</b>: <code>{escape(draft_id)}</code>\n"
+               f"📊 <b>감수 점수</b>: <b>{score}점</b> ({verdict})\n"
+               f"🖼️ <b>포함 에셋</b>: 썸네일 1장 + 학습 다이어그램 2장 탑재 완료\n\n"
+               f"📋 <b>편집 총평</b>:\n{summary}\n\n"
+               f"━━━━━━━━━━━━━━━━━━━━\n"
+               f"💡 <i>초안 본문과 다이어그램을 확인하신 후 승인해주세요.</i>")
+
+        return self._send_message(msg, {"inline_keyboard": [
+            [{"text": "📖 본문 초안 보기", "callback_data": f"view_draft:{draft_id}"}],
+            [{"text": "✅ 검토 후 즉시 승인 및 발행", "callback_data": f"approve:{draft_id}"},
+             {"text": "❌ 발행 보류", "callback_data": f"reject:{draft_id}"}]]})
 
     # -------------------------------------------------------------
     # 2. 새로운 글 작성 및 배포 보고

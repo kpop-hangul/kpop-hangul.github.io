@@ -145,11 +145,57 @@ def cmd_images():
 
     print(f"✨ Successfully refreshed thumbnails and illustrations for {updated} posts!")
 
+def cmd_queue():
+    print_banner()
+    from modules.draft_queue import DraftApprovalQueue
+    queue = DraftApprovalQueue(PIPELINE_DIR)
+    pending = queue.list_pending()
+    print(f"📋 Pending Draft Review Queue: {len(pending)} item(s)")
+    if not pending:
+        print("  ✅ No drafts waiting for review.")
+        return
+    for idx, d in enumerate(pending, 1):
+        score = d.get("review", {}).get("total_score", "N/A")
+        verdict = d.get("review", {}).get("verdict", "")
+        print(f"  {idx}. [{score}pt / {verdict}] ID: {d['draft_id']}")
+        print(f"     Title: {d.get('title')}")
+        print(f"     Created: {d.get('created_at')}")
+    print("\n💡 To approve: python3 manage_kpop.py approve <draft_id>")
+    print("💡 To reject:  python3 manage_kpop.py reject <draft_id>")
+
+def cmd_approve(draft_id: str):
+    print_banner()
+    if not draft_id:
+        print("⚠️ Please specify a draft ID to approve: python3 manage_kpop.py approve <draft_id>")
+        return
+    from daily_kpop_pipeline import load_config, publish_queued_draft
+    config = load_config()
+    print(f"🚀 Approving & Publishing K-Pop draft: {draft_id}...")
+    success, res = publish_queued_draft(config, draft_id, human_approved=True)
+    if success:
+        print(f"🎉 Successfully published!\nURL: {res}")
+    else:
+        print(f"❌ Failed to publish: {res}")
+
+def cmd_reject(draft_id: str):
+    print_banner()
+    if not draft_id:
+        print("⚠️ Please specify a draft ID to reject: python3 manage_kpop.py reject <draft_id>")
+        return
+    from modules.draft_queue import DraftApprovalQueue
+    queue = DraftApprovalQueue(PIPELINE_DIR)
+    ok = queue.mark_rejected(draft_id)
+    if ok:
+        print(f"❌ Draft {draft_id} marked as rejected.")
+    else:
+        print(f"⚠️ Draft {draft_id} not found.")
+
 def main():
     parser = argparse.ArgumentParser(description="K-Pop Hangul Blog Management CLI")
-    parser.add_argument("action", choices=["status", "charts", "candidates", "run", "images"], nargs="?", default="status",
-                        help="Action to perform (status, charts, candidates, run, images)")
-    parser.add_argument("--count", type=int, default=3, help="Number of songs for pipeline run")
+    parser.add_argument("action", choices=["status", "charts", "candidates", "run", "images", "queue", "approve", "reject"], nargs="?", default="status",
+                        help="Action to perform (status, charts, candidates, run, images, queue, approve, reject)")
+    parser.add_argument("id", nargs="?", default=None, help="Draft ID for approve/reject")
+    parser.add_argument("--count", type=int, default=1, help="Number of songs for pipeline run (default: 1)")
 
     args = parser.parse_args()
 
@@ -163,6 +209,12 @@ def main():
         cmd_run(count=args.count)
     elif args.action == "images":
         cmd_images()
+    elif args.action == "queue":
+        cmd_queue()
+    elif args.action == "approve":
+        cmd_approve(args.id)
+    elif args.action == "reject":
+        cmd_reject(args.id)
 
 if __name__ == "__main__":
     main()

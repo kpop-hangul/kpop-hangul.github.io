@@ -162,9 +162,11 @@ def run_geeknews_weekly_pipeline(config: dict):
     print("🎉 GeekNews 주간 테크 브리핑 발행 완료!")
 
 def main():
-    parser = argparse.ArgumentParser(description="앱시안(absian) 자동화 블로그 파이프라인")
+    parser = argparse.ArgumentParser(description="K-Pop Hangul 자동화 블로그 파이프라인 (HITL Review Gate)")
     parser.add_argument("--mode", choices=["auto", "dryrun", "geeknews_weekly", "trend", "interactive", "report", "morning_report", "evening_report", "revenue_report", "health", "test_telegram"], default="auto")
-    parser.add_argument("--approve", action="store_true", help="초안 자동 승인 모드")
+    parser.add_argument("--approve", action="store_true", help="호환 옵션: 자동 발행하지 않고 검토 큐에 저장")
+    parser.add_argument("--publish-draft", type=str, default=None, help="대기 큐의 특정 draft_id 승인 및 발행")
+    parser.add_argument("--list-queue", action="store_true", help="대기 큐 목록 조회")
     parser.add_argument("--category", type=str, default=None, help="특정 카테고리 지정")
     args = parser.parse_args()
 
@@ -172,8 +174,27 @@ def main():
     telegram = TelegramNotifier(config)
     tracker = PerformanceTracker(config)
 
+    if args.list_queue:
+        from daily_kpop_pipeline import DraftApprovalQueue, ROOT_DIR
+        queue = DraftApprovalQueue(ROOT_DIR)
+        pending = queue.list_pending()
+        print(f"\n📋 [대기 중인 K-Pop 초안 큐 ({len(pending)}건)]")
+        for d in pending:
+            print(f"  • [{d['draft_id']}] ({d.get('created_at')}) {d.get('title')}")
+        return
+
+    if args.publish_draft:
+        from daily_kpop_pipeline import publish_queued_draft
+        success, res = publish_queued_draft(config, args.publish_draft, human_approved=True)
+        if success:
+            print(f"🎉 성공적으로 발행되었습니다: {res}")
+        else:
+            print(f"❌ 발행 실패: {res}")
+        return
+
     if args.mode == "auto":
-        run_auto_pipeline(config, auto_approve=True, target_category=args.category)
+        from daily_kpop_pipeline import run_daily_pipeline
+        run_daily_pipeline(count=1, dry_run=False, auto_approve=args.approve)
         
     elif args.mode == "geeknews_weekly":
         run_geeknews_weekly_pipeline(config)
