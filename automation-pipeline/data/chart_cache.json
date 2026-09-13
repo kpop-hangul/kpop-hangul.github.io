@@ -1,15 +1,6 @@
 [
   {
     "rank": 2,
-    "chartSource": "Spotify Daily Top",
-    "artist": "CORTIS",
-    "title": "REDRED",
-    "album": "",
-    "genre": "Hip-Hop & Rap",
-    "difficulty": "Advanced"
-  },
-  {
-    "rank": 3,
     "chartSource": "Melon Top 100",
     "artist": "아이오아이 (I.O.I)",
     "title": "갑자기",
@@ -18,12 +9,21 @@
     "difficulty": "Intermediate"
   },
   {
-    "rank": 4,
+    "rank": 5,
     "chartSource": "Spotify Daily Top",
-    "artist": "Jung Kook",
-    "title": "Seven (w/ Latto)",
+    "artist": "IU",
+    "title": "Unknown Planet",
     "album": "",
-    "genre": "Dance & Pop",
+    "genre": "Ballad & OST",
+    "difficulty": "Intermediate"
+  },
+  {
+    "rank": 6,
+    "chartSource": "Spotify Daily Top",
+    "artist": "IU",
+    "title": "Dear my crazy soulmate",
+    "album": "",
+    "genre": "Ballad & OST",
     "difficulty": "Intermediate"
   }
 ]

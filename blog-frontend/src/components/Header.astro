@@ -246,6 +246,7 @@ const genres = await getGenreStats();
   function closeMobileMenu() {
     if (mobileDrawer) mobileDrawer.classList.add('hidden');
     if (mobileOverlay) mobileOverlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
   }
 
   function toggleMobileMenu() {
@@ -253,8 +254,10 @@ const genres = await getGenreStats();
       const isHidden = mobileDrawer.classList.toggle('hidden');
       if (isHidden) {
         mobileOverlay.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
       } else {
         mobileOverlay.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
       }
     }
   }

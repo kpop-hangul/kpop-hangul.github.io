@@ -1,21 +1,46 @@
 ---
-title: "Learn Korean with BIG Naughty - 'Nostalgia': Lyrics, Vocabulary & Grammar Breakdown"
-description: "Master intermediate Korean with BIG Naughty's 'Nostalgia'! Learn relative clauses, future progressive verb patterns, core vocabulary, and fluent pronunciation."
-pubDate: "2026-09-08"
-heroImage: "/images/default-hero.svg"
-category: "Intermediate (Level 2)"
-difficulty: "Intermediate"
-genre: "R&B & Soul"
-artist: "BIG Naughty"
-songTitle: "Nostalgia"
-hangulTitle: "노스탈지아"
-album: "Single"
+title: 'Learn Korean with BIG Naughty - ''Nostalgia'': Lyrics, Vocabulary & Grammar
+  Breakdown'
+description: Master intermediate Korean with BIG Naughty's 'Nostalgia'! Learn relative
+  clauses, future progressive verb patterns, core vocabulary, and fluent pronunciation.
+pubDate: '2026-09-08'
+heroImage: /images/thumbnails/2026-09-08-big-naughty-nostalgia.svg
+category: Intermediate (Level 2)
+difficulty: Intermediate
+genre: R&B & Soul
+artist: BIG Naughty
+songTitle: Nostalgia
+hangulTitle: 노스탈지아
+album: Single
 chartRank: 1
-chartSource: "Spotify Daily Top"
-tags: ["BIG Naughty", "Nostalgia", "Learn Korean", "K-Pop Lyrics", "Hangul", "Grammar", "Melon Top 100"]
-author: "K-Pop Hangul Team"
-readingTime: "7 min read"
-faqs: [{"question": "What Korean level is required to understand Nostalgia by BIG Naughty?", "answer": "Nostalgia is best suited for Intermediate learners (TOPIK II Level 3–4 or CEFR B1–B2). While the chorus features everyday words for emotions and time, fully grasping the song requires familiarity with complex relative clause modifiers (such as -아/어 보지 못한 and -아/어 나갈) and introspective poetic phrasing."}, {"question": "What is the key Korean grammar point taught in this song?", "answer": "The song highlights two core patterns: experiential negation in relative clauses (-아/어 보지 못한 + Noun, meaning 'the noun that one has never experienced') and progressive future action using directional auxiliary verbs (-아/어 나가다, meaning 'to steadily do forward into the future'). Both are essential for natural, expressive Korean."}, {"question": "What does '지나온 시간이 네게 남겨준 아주 진한 노스탈지아' mean in English?", "answer": "It translates to: 'A deeply rich nostalgia left behind for you by the passing of time.' In this poignant line, BIG Naughty reframes painful past regrets not as mistakes, but as a bittersweet, precious gift of nostalgia (노스탈지아) shaped by all the days you have lived through."}]
+chartSource: Spotify Daily Top
+tags:
+- BIG Naughty
+- Nostalgia
+- Learn Korean
+- K-Pop Lyrics
+- Hangul
+- Grammar
+- Melon Top 100
+author: K-Pop Hangul Team
+readingTime: 7 min read
+faqs:
+- question: What Korean level is required to understand Nostalgia by BIG Naughty?
+  answer: Nostalgia is best suited for Intermediate learners (TOPIK II Level 3–4 or
+    CEFR B1–B2). While the chorus features everyday words for emotions and time, fully
+    grasping the song requires familiarity with complex relative clause modifiers
+    (such as -아/어 보지 못한 and -아/어 나갈) and introspective poetic phrasing.
+- question: What is the key Korean grammar point taught in this song?
+  answer: 'The song highlights two core patterns: experiential negation in relative
+    clauses (-아/어 보지 못한 + Noun, meaning ''the noun that one has never experienced'')
+    and progressive future action using directional auxiliary verbs (-아/어 나가다, meaning
+    ''to steadily do forward into the future''). Both are essential for natural, expressive
+    Korean.'
+- question: What does '지나온 시간이 네게 남겨준 아주 진한 노스탈지아' mean in English?
+  answer: 'It translates to: ''A deeply rich nostalgia left behind for you by the
+    passing of time.'' In this poignant line, BIG Naughty reframes painful past regrets
+    not as mistakes, but as a bittersweet, precious gift of nostalgia (노스탈지아) shaped
+    by all the days you have lived through.'
 ---
 
 ## 1. Song Overview & Korean Learning Guide
@@ -64,6 +89,13 @@ Here are the six most iconic lines from the chorus and hook of **"Nostalgia"**, 
 - **English Translation**: Let's hold dear and treasure the memories we are going to create going forward [Literal: Into the future to-fill memories, let's keep/cherish]
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-big-naughty-nostalgia-01 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-big-naughty-nostalgia-01.webp" alt="BIG Naughty - Nostalgia Lyrics and Phonetic Sound Change Diagram" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 1: BIG Naughty - &#x27;Nostalgia&#x27; Syllable Block Structure, Phonetic Linking (연음), and Chorus Flow Guide</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-big-naughty-nostalgia-01 -->
 
 ## 3. Core Vocabulary Table
 
@@ -140,6 +172,13 @@ Here, **채우다** (*to fill*) merges with **-어 나가다** to form **채워 
    "I plan to steadily practice three Korean expressions every single day going forward."
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-big-naughty-nostalgia-02 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-big-naughty-nostalgia-02.webp" alt="BIG Naughty - Nostalgia Korean Grammar Formula and Sentence Patterns" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 2: BIG Naughty - &#x27;Nostalgia&#x27; Key Grammar Formulas, Conjugation Patterns, and Conversational Usage</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-big-naughty-nostalgia-02 -->
 
 ## 5. Pronunciation Secrets (연음 & 받침)
 
@@ -223,8 +262,10 @@ How should the phrase **`살아보지 못한`** be naturally pronounced in conne
 
 1. **Vocabulary Match:**
    - **(A) 추억 $\rightarrow$ 3:** *추억* means a cherished past memory or reminiscence (distinct from *기억*, which is the general cognitive ability to remember).
-   - **(B) 좌절 $ightarrow$ 1:** *좌절* means frustration or a discouraging setback.
-   - **(C) 간직하다 $ightarrow$ 2:** *간직하다* means to treasure, preserve, or tuck something securely into your heart.
+   - **(B) 좌절 $
+ightarrow$ 1:** *좌절* means frustration or a discouraging setback.
+   - **(C) 간직하다 $
+ightarrow$ 2:** *간직하다* means to treasure, preserve, or tuck something securely into your heart.
 
 2. **Particle Fill-in-the-Blank:**
    - **Correct Answer: ② 에 대한**

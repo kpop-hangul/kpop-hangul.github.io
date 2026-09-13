@@ -1,5 +1,6 @@
 import { getCollection } from 'astro:content';
 import siteConfig from '../config/site';
+import { getCategorySlug, getGenreSlug, getArtistSlug } from '../utils/slug';
 
 export async function GET(context: any) {
   const siteUrl = String(context.site || siteConfig.site.url || 'https://kpop-hangul.github.io').replace(/\/$/, '');
@@ -16,12 +17,31 @@ export async function GET(context: any) {
     { url: '/genres/', changefreq: 'weekly', priority: '0.8' },
     { url: '/artists/', changefreq: 'weekly', priority: '0.8' },
     { url: '/gallery/', changefreq: 'weekly', priority: '0.8' },
+    { url: '/categories/', changefreq: 'weekly', priority: '0.8' },
     { url: '/search/', changefreq: 'weekly', priority: '0.7' },
     { url: '/about/', changefreq: 'monthly', priority: '0.7' },
     { url: '/privacy-policy/', changefreq: 'monthly', priority: '0.5' },
     { url: '/terms/', changefreq: 'monthly', priority: '0.5' },
     { url: '/contact/', changefreq: 'monthly', priority: '0.6' },
   ];
+
+  const genrePages = [...new Set(posts.map(post => getGenreSlug(post.data.genre)))].filter(Boolean).map(slug => ({
+    url: `/genres/${encodeURIComponent(slug)}/`,
+    changefreq: 'weekly',
+    priority: '0.8',
+  }));
+
+  const artistPages = [...new Set(posts.map(post => getArtistSlug(post.data.artist)))].filter(Boolean).map(slug => ({
+    url: `/artists/${encodeURIComponent(slug)}/`,
+    changefreq: 'weekly',
+    priority: '0.8',
+  }));
+
+  const categoryPages = [...new Set(posts.map(post => getCategorySlug(post.data.category)))].filter(Boolean).map(slug => ({
+    url: `/categories/${encodeURIComponent(slug)}/`,
+    changefreq: 'weekly',
+    priority: '0.8',
+  }));
 
   const postPages = posts.map(post => ({
     url: `/blog/${post.slug}/`,
@@ -30,8 +50,16 @@ export async function GET(context: any) {
     priority: post.data.featured ? '0.9' : '0.8',
   }));
 
+  const dynamicTaxonomyPages = [...genrePages, ...artistPages, ...categoryPages];
+
   const allUrls = [
     ...staticPages.map(page => `
+    <url>
+      <loc>${siteUrl}${page.url}</loc>
+      <changefreq>${page.changefreq}</changefreq>
+      <priority>${page.priority}</priority>
+    </url>`),
+    ...dynamicTaxonomyPages.map(page => `
     <url>
       <loc>${siteUrl}${page.url}</loc>
       <changefreq>${page.changefreq}</changefreq>

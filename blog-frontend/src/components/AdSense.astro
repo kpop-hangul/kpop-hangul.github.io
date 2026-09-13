@@ -49,7 +49,9 @@ const isDev = import.meta.env.DEV;
 ) : null}
 
 <style>
-  .ad-slot-container:empty {
+  .ad-slot-container:empty,
+  .ad-slot-container:has(ins:empty),
+  .ad-slot-container:has(ins[data-ad-status="unfilled"]) {
     display: none !important;
   }
 </style>

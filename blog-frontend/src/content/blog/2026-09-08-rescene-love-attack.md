@@ -1,21 +1,44 @@
 ---
-title: "Learn Korean with RESCENE - 'LOVE ATTACK': Lyrics, Vocabulary & Grammar Breakdown"
-description: "Master beginner Korean with RESCENE's hit 'LOVE ATTACK'! Learn key vocabulary, -(으)ㄹ 때 time grammar, pronunciation rules, and natural conversational nuances."
-pubDate: "2026-09-08"
-heroImage: "/images/default-hero.svg"
-category: "Beginner (Level 1)"
-difficulty: "Beginner"
-genre: "Dance & Pop"
-artist: "RESCENE"
-songTitle: "LOVE ATTACK"
-hangulTitle: "러브 어택"
-album: "SCENEDROME"
+title: 'Learn Korean with RESCENE - ''LOVE ATTACK'': Lyrics, Vocabulary & Grammar
+  Breakdown'
+description: Master beginner Korean with RESCENE's hit 'LOVE ATTACK'! Learn key vocabulary,
+  -(으)ㄹ 때 time grammar, pronunciation rules, and natural conversational nuances.
+pubDate: '2026-09-08'
+heroImage: /images/thumbnails/2026-09-08-rescene-love-attack.svg
+category: Beginner (Level 1)
+difficulty: Beginner
+genre: Dance & Pop
+artist: RESCENE
+songTitle: LOVE ATTACK
+hangulTitle: 러브 어택
+album: SCENEDROME
 chartRank: 1
-chartSource: "Melon Top 100"
-tags: ["RESCENE", "LOVE ATTACK", "Learn Korean", "K-Pop Lyrics", "Hangul", "Grammar", "Melon Top 100"]
-author: "K-Pop Hangul Team"
-readingTime: "7 min read"
-faqs: [{"question": "What Korean level is required to understand LOVE ATTACK by RESCENE?", "answer": "LOVE ATTACK is well-suited for Beginner learners (TOPIK Level 1–2 / CEFR A1–A2). The chorus features foundational sentence patterns such as time clauses (-(으)ㄹ 때), past experience markers (-(으)ㄴ 적이 없다), and common descriptive adjectives (눈부시다, 어울리다)."}, {"question": "What is the key Korean grammar point taught in this song?", "answer": "The primary grammar structure highlighted in the chorus is Verb Stem + -(으)ㄹ 때 ('when doing [verb]'), contracted conversationally to -(으)ㄹ 땐 in lines like '너의 손을 잡을 땐' (When I hold your hand) and '너와 어우러질 땐' (When I harmonize with you)."}, {"question": "What does '숨김없이 보여줘' mean in English?", "answer": "'숨김없이 보여줘' translates naturally to 'Show me without hiding anything' or 'Show your true colors openly.' It combines the adverb '숨김없이' (openly, without concealment, from 숨기다 'to hide') with '보여줘' (the casual imperative of 보여주다, 'to show')."}]
+chartSource: Melon Top 100
+tags:
+- RESCENE
+- LOVE ATTACK
+- Learn Korean
+- K-Pop Lyrics
+- Hangul
+- Grammar
+- Melon Top 100
+author: K-Pop Hangul Team
+readingTime: 7 min read
+faqs:
+- question: What Korean level is required to understand LOVE ATTACK by RESCENE?
+  answer: LOVE ATTACK is well-suited for Beginner learners (TOPIK Level 1–2 / CEFR
+    A1–A2). The chorus features foundational sentence patterns such as time clauses
+    (-(으)ㄹ 때), past experience markers (-(으)ㄴ 적이 없다), and common descriptive adjectives
+    (눈부시다, 어울리다).
+- question: What is the key Korean grammar point taught in this song?
+  answer: The primary grammar structure highlighted in the chorus is Verb Stem + -(으)ㄹ
+    때 ('when doing [verb]'), contracted conversationally to -(으)ㄹ 땐 in lines like
+    '너의 손을 잡을 땐' (When I hold your hand) and '너와 어우러질 땐' (When I harmonize with you).
+- question: What does '숨김없이 보여줘' mean in English?
+  answer: '''숨김없이 보여줘'' translates naturally to ''Show me without hiding anything''
+    or ''Show your true colors openly.'' It combines the adverb ''숨김없이'' (openly,
+    without concealment, from 숨기다 ''to hide'') with ''보여줘'' (the casual imperative
+    of 보여주다, ''to show'').'
 ---
 
 ## 1. Song Overview & Korean Learning Guide
@@ -59,6 +82,13 @@ Here is the memorable chorus of "LOVE ATTACK", presented line-by-line:
 - **English Translation**: Just like chemistry, we match perfectly (Lit. As if chemically, we blend/suit each other completely)
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-rescene-love-attack-01 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-rescene-love-attack-01.webp" alt="RESCENE - LOVE ATTACK Lyrics and Phonetic Sound Change Diagram" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 1: RESCENE - &#x27;LOVE ATTACK&#x27; Syllable Block Structure, Phonetic Linking (연음), and Chorus Flow Guide</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-rescene-love-attack-01 -->
 
 ## 3. Core Vocabulary Table
 
@@ -122,6 +152,13 @@ Here is the memorable chorus of "LOVE ATTACK", presented line-by-line:
      - **English Translation**: I had never had such a special experience before.
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-rescene-love-attack-02 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-rescene-love-attack-02.webp" alt="RESCENE - LOVE ATTACK Korean Grammar Formula and Sentence Patterns" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 2: RESCENE - &#x27;LOVE ATTACK&#x27; Key Grammar Formulas, Conjugation Patterns, and Conversational Usage</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-rescene-love-attack-02 -->
 
 ## 5. Pronunciation Secrets (연음 & 받침)
 

@@ -1,21 +1,46 @@
 ---
-title: "Learn Korean with BIGBANG - 'BiiiG': Lyrics, Vocabulary & Grammar Breakdown"
-description: "Master advanced Korean with BIGBANG's 'BiiiG'! Unpack G-Dragon's wordplay, classic proverbs, K-pop slang, and authentic hip-hop flow in this guide."
-pubDate: "2026-09-08"
-heroImage: "/images/default-hero.svg"
-category: "Advanced (Level 3)"
-difficulty: "Advanced"
-genre: "Hip-Hop & Rap"
-artist: "BIGBANG"
-songTitle: "BiiiG"
-hangulTitle: "BiiiG"
-album: "BiiiG"
+title: 'Learn Korean with BIGBANG - ''BiiiG'': Lyrics, Vocabulary & Grammar Breakdown'
+description: Master advanced Korean with BIGBANG's 'BiiiG'! Unpack G-Dragon's wordplay,
+  classic proverbs, K-pop slang, and authentic hip-hop flow in this guide.
+pubDate: '2026-09-08'
+heroImage: /images/thumbnails/2026-09-08-bigbang-biiig.svg
+category: Advanced (Level 3)
+difficulty: Advanced
+genre: Hip-Hop & Rap
+artist: BIGBANG
+songTitle: BiiiG
+hangulTitle: BiiiG
+album: BiiiG
 chartRank: 2
-chartSource: "Melon Top 100"
-tags: ["BIGBANG", "BiiiG", "Learn Korean", "K-Pop Lyrics", "Hangul", "Grammar", "Melon Top 100"]
-author: "K-Pop Hangul Team"
-readingTime: "7 min read"
-faqs: [{"question": "What Korean level is required to understand BiiiG by BIGBANG?", "answer": "BiiiG is best suited for Advanced learners (TOPIK II Level 5–6 or CEFR C1–C2). The song incorporates historical proverbs (구관이 명관), Hanja character references (빛날 희), rapid colloquial contractions (그니까, -이라지 마), and sophisticated hip-hop double entendres that require strong contextual and cultural comprehension."}, {"question": "What is the key Korean grammar point taught in this song?", "answer": "A primary grammar highlight is the colloquial indirect prohibition pattern 'Noun + -(이)라지 마' (contracted from 'Noun + -(이)라고 하지 마'), meaning 'Don't say it is [Noun]!' as heard in '유행이라지 마' (Don't call it just a trend). Another key structure is the spoken causal marker '그니까' (short for 그러니까, 'that's why') paired with the confident sentence ending '-지'."}, {"question": "What does '구관이 명관' mean in English?", "answer": "'구관이 명관' (gugwan-i myeong-gwan) is a famous Korean proverb literally meaning 'the former magistrate was indeed a renowned official.' In everyday speech, it translates to 'old hands are the best,' 'veterans know best,' or 'classic never dies.' BIGBANG uses this idiom to assert that their 20 years of unmatched experience cannot be eclipsed by new trends."}]
+chartSource: Melon Top 100
+tags:
+- BIGBANG
+- BiiiG
+- Learn Korean
+- K-Pop Lyrics
+- Hangul
+- Grammar
+- Melon Top 100
+author: K-Pop Hangul Team
+readingTime: 7 min read
+faqs:
+- question: What Korean level is required to understand BiiiG by BIGBANG?
+  answer: BiiiG is best suited for Advanced learners (TOPIK II Level 5–6 or CEFR C1–C2).
+    The song incorporates historical proverbs (구관이 명관), Hanja character references
+    (빛날 희), rapid colloquial contractions (그니까, -이라지 마), and sophisticated hip-hop
+    double entendres that require strong contextual and cultural comprehension.
+- question: What is the key Korean grammar point taught in this song?
+  answer: A primary grammar highlight is the colloquial indirect prohibition pattern
+    'Noun + -(이)라지 마' (contracted from 'Noun + -(이)라고 하지 마'), meaning 'Don't say it
+    is [Noun]!' as heard in '유행이라지 마' (Don't call it just a trend). Another key structure
+    is the spoken causal marker '그니까' (short for 그러니까, 'that's why') paired with the
+    confident sentence ending '-지'.
+- question: What does '구관이 명관' mean in English?
+  answer: '''구관이 명관'' (gugwan-i myeong-gwan) is a famous Korean proverb literally
+    meaning ''the former magistrate was indeed a renowned official.'' In everyday
+    speech, it translates to ''old hands are the best,'' ''veterans know best,'' or
+    ''classic never dies.'' BIGBANG uses this idiom to assert that their 20 years
+    of unmatched experience cannot be eclipsed by new trends.'
 ---
 
 ## 1. Song Overview & Korean Learning Guide
@@ -65,6 +90,13 @@ Here are the most iconic, culturally dense lines from the hook, chorus, and open
 - **English Translation**: Shout it out loud, that's it, coincidentally today is a crimson sunset [A direct nostalgic homage to BIGBANG's legendary 2008 anthem "Sunset Glow" (붉은 노을)]
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-bigbang-biiig-01 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-bigbang-biiig-01.webp" alt="BIGBANG - BiiiG Lyrics and Phonetic Sound Change Diagram" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 1: BIGBANG - &#x27;BiiiG&#x27; Syllable Block Structure, Phonetic Linking (연음), and Chorus Flow Guide</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-bigbang-biiig-01 -->
 
 ## 3. Core Vocabulary Table
 
@@ -136,6 +168,13 @@ In natural spoken Korean, `그러니까` is universally contracted to `그니까
      - **English**: We've worked together in sync for over ten years; that's why we understand each other just by exchanging glances.
 
 ---
+
+<!-- article-illustration:kpop-2026-09-08-bigbang-biiig-02 -->
+<figure class="article-illustration my-8 block">
+  <img src="/images/articles/kpop-2026-09-08-bigbang-biiig-02.webp" alt="BIGBANG - BiiiG Korean Grammar Formula and Sentence Patterns" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
+  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 2: BIGBANG - &#x27;BiiiG&#x27; Key Grammar Formulas, Conjugation Patterns, and Conversational Usage</figcaption>
+</figure>
+<!-- /article-illustration:kpop-2026-09-08-bigbang-biiig-02 -->
 
 ## 5. Pronunciation Secrets (연음 & 받침)
 

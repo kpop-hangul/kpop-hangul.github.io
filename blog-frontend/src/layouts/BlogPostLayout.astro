@@ -30,6 +30,7 @@ const {
   tags = [],
   author = 'K-Pop Hangul Team',
   readingTime = '6 min read',
+  heroImage,
   faqs = [],
 } = frontmatter;
 
@@ -55,6 +56,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
 <BaseLayout
   title={title}
   description={description}
+  image={heroImage}
   article={true}
   pubDate={pubDate}
   updatedDate={updatedDate}
@@ -142,6 +144,20 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         </a>
       </div>
     </header>
+
+    <!-- 🖼️ Featured Lesson Thumbnail (Hero Banner) -->
+    {heroImage && heroImage !== '/images/default-hero.svg' && (
+      <div class="mb-8 rounded-3xl overflow-hidden border border-slate-200/90 shadow-md aspect-[1200/630] bg-slate-950">
+        <img
+          src={heroImage.startsWith('/') ? `${base}${heroImage}` : heroImage}
+          alt={title}
+          class="w-full h-full object-cover"
+          width="1200"
+          height="630"
+          loading="eager"
+        />
+      </div>
+    )}
 
     <!-- Top AdSense Slot -->
     <AdSense slotId="1234567890" type="top-banner" />
@@ -487,5 +503,15 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       });
     });
   </script>
+
+  <style is:global>
+    .article-illustration {
+      margin: 2.5rem 0 !important;
+    }
+    .article-illustration img {
+      border-radius: 1.25rem !important;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08) !important;
+    }
+  </style>
 </BaseLayout>
 

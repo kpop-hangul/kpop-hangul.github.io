@@ -1,42 +1,42 @@
 ```json
 {
   "overall_score": 92,
-  "summary": "The K-Pop Hangul project demonstrates an outstanding synthesis of modern web architecture (Astro), engaging UI/UX, and robust pedagogical design. The automated content pipeline intelligently bridges K-Pop fandom with language learning through daily chart integrations and active recall features. However, minor refactoring is needed to fix AdSense placeholder logic, improve crawler deduplication resilience, and enhance vocabulary phonetic guides.",
+  "summary": "The codebase features an excellent pedagogical approach, leveraging a fast Astro SSG architecture and a polished Tailwind UI tailored for K-Pop language learning. However, the reliance on brittle client-side DOM traversal for parsing Markdown lyrics and hardcoded paths in the automation pipeline introduce reliability risks. Addressing these architectural quirks will elevate the platform to a robust, enterprise-grade learning tool.",
   "critical_fixes": [
     {
       "file": "blog-frontend/src/layouts/BlogPostLayout.astro",
-      "issue": "The Props interface for frontmatter is out of sync with the Zod schema in config.ts (missing properties like album, youtubeId), which can cause TypeScript errors.",
-      "recommendation": "Import the Zod schema type directly (import type { CollectionEntry } from 'astro:content') and use CollectionEntry<'blog'>['data'] for frontmatter typing to ensure a single source of truth."
+      "issue": "Client-side DOM traversal relies on brittle English prefixes ('Hangul:', 'English Translation:') to inject TTS and Copy buttons, which causes Cumulative Layout Shift (CLS) on mobile and breaks if writers alter formatting.",
+      "recommendation": "Replace client-side DOM parsing with an Astro/MDX component (e.g., `<LyricBlock />`) or a custom Rehype plugin to process and enhance lyric blocks securely at build time."
     },
     {
       "file": "blog-frontend/src/components/AdSense.astro",
-      "issue": "The dev placeholder rendering logic is flawed. The isValidSlot variable evaluates to false for dummy IDs, causing the component to return null and completely bypass the isDev placeholder rendering block.",
-      "recommendation": "Update the rendering logic to return dev placeholders even if dummy IDs are used when isDev is true (e.g., if (isDev) return <Placeholder/>; else if (publisherId && isValidSlot) return <Ad/>;)."
+      "issue": "When AdSense is blocked by browser extensions, the container still renders the 'ADVERTISEMENT' label and occupies empty space, breaking the visual layout.",
+      "recommendation": "Wrap the 'ADVERTISEMENT' label inside a container that is hidden via a client-side observer if the ad fails to load, or use CSS `:has(ins:empty)` to hide the entire slot when unpopulated."
     },
     {
-      "file": "automation-pipeline/modules/kpop_chart_crawler.py",
-      "issue": "The deduplication logic in is_song_published uses simple substring matching. This causes false positives for artists with short names (e.g., 'V', 'RM', 'Jin') matching inside other group names or collaborations.",
-      "recommendation": "Implement exact token matching, Levenshtein distance, or ideally utilize unique identifiers (like Melon Song ID / Spotify Track ID) for robust, foolproof deduplication."
+      "file": "automation-pipeline/modules/article_image_generator.py",
+      "issue": "The subprocess call to FFmpeg uses a hardcoded absolute path ('/usr/bin/ffmpeg'), which will crash the automation pipeline on Windows, Mac, or non-standard Docker environments.",
+      "recommendation": "Change the subprocess command to use 'ffmpeg' from the system PATH, or allow the executable path to be configured via environment variables."
     }
   ],
   "design_enhancements": [
     {
-      "component": "Markdown Tables (Prose Content)",
-      "enhancement": "Instead of relying purely on client-side JS to inject .overflow-x-auto wrappers (which causes Cumulative Layout Shifts and breaks if JS fails), add a responsive CSS rule (e.g., .prose table { display: block; overflow-x: auto; white-space: nowrap; }) to the global stylesheet."
+      "component": "Typography & Readability (Global)",
+      "enhancement": "Increase the line-height (e.g., `leading-loose`) for Korean text blocks. Hangul characters, especially those with double batchim (받침), require more vertical breathing room than Latin characters for optimal legibility on mobile."
     },
     {
-      "component": "Flashcard Active Recall UI",
-      "enhancement": "Improve accessibility for the blurred flashcard cells. Currently, screen readers will still read the visually hidden text, breaking the active recall experience for visually impaired users. Use aria-hidden toggles alongside the blur-sm filter."
+      "component": "Mobile Navigation Drawer (Header.astro)",
+      "enhancement": "The mobile menu overlay does not lock the body scroll when open, causing background content scrolling. Add logic to toggle an `.overflow-hidden` class on the `<body>` element when the drawer is active."
     }
   ],
   "pedagogical_enhancements": [
     {
-      "topic": "Phonetic Pronunciation Guide in Vocabulary",
-      "recommendation": "Update the Content Writer Agent prompt to mandate a dedicated 'Phonetic Hangul (발음)' column in the vocabulary tables (e.g., 빛나다 [빈나다]) to directly support the phonetic linking rules taught in Section 5."
+      "topic": "Native Pronunciation Accuracy (TTS)",
+      "recommendation": "The browser's native Web `SpeechSynthesis` API often uses robotic voices and struggles with contextual liaison (연음). Pre-generate high-quality audio snippets using a cloud TTS API (Naver Clova or Google Cloud) during the build pipeline for accurate, native-sounding shadowing."
     },
     {
-      "topic": "Literal Word-for-Word Translation",
-      "recommendation": "Introduce a literal word-for-word translation feature (perhaps as a tooltip or 4th line) underneath the natural English translation in the 3-Line Chorus Breakdown to help beginners accurately map specific Korean particles to meanings."
+      "topic": "Morphological Grammar Highlighting",
+      "recommendation": "In the Grammar Deep Dive section, visually differentiate the 'Verb Stem' from the 'Suffix' (e.g., highlighting the stem in blue and suffix in pink) within the formulas and tables. This visual chunking accelerates pattern recognition for beginners."
     }
   ]
 }

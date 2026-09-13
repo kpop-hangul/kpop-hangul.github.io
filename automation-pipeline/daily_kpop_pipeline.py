@@ -69,7 +69,7 @@ def save_markdown_post(article: Dict[str, Any], slug: str) -> str:
         "title": article.get("title", "Learn Korean with K-Pop"),
         "description": article.get("description", "Master Korean lyrics, vocabulary and grammar."),
         "pubDate": today_str,
-        "heroImage": "/images/default-hero.svg",
+        "heroImage": article.get("heroImage", f"/images/thumbnails/{slug}.svg"),
         "category": article.get("category", "Beginner (Level 1)"),
         "difficulty": article.get("difficulty", "Beginner"),
         "genre": article.get("genre", "Dance & Pop"),
@@ -155,6 +155,33 @@ def run_daily_pipeline(count: int = 3, specific_song: Optional[Dict[str, Any]] =
             results.append({"slug": slug, "title": article.get("title"), "score": score, "status": "dry_run"})
             continue
 
+        # Generate SVG thumbnail & contextual article illustrations
+        try:
+            from modules.thumbnail_generator import generate_thumbnail_for_post
+            from modules.article_image_generator import generate_and_integrate_article_images
+
+            post_data = {
+                "slug": slug,
+                "title": article.get("title", ""),
+                "artist": article.get("artist", song.get("artist")),
+                "songTitle": article.get("songTitle", song.get("title")),
+                "hangulTitle": article.get("hangulTitle", ""),
+                "difficulty": article.get("difficulty", "Beginner"),
+                "genre": article.get("genre", "Dance & Pop"),
+                "chartRank": article.get("chartRank", song.get("rank")),
+                "chartSource": article.get("chartSource", song.get("chartSource")),
+            }
+            thumb_url = generate_thumbnail_for_post(post_data)
+            article["heroImage"] = thumb_url
+            print(f"  🖼️ Generated SVG Thumbnail: {thumb_url}")
+
+            updated_content, imgs = generate_and_integrate_article_images(article, slug)
+            article["markdown_content"] = updated_content
+            print(f"  📸 Injected {len(imgs)} contextual educational diagrams into lesson!")
+        except Exception as e:
+            print(f"  ⚠️ Thumbnail / Illustration generation warning: {e}")
+            article["heroImage"] = f"/images/thumbnails/{slug}.svg"
+
         # Save to Astro content
         post_path = save_markdown_post(article, slug)
         print(f"📄 Saved Astro Content: {os.path.relpath(post_path, ROOT_DIR)}")
@@ -170,7 +197,8 @@ def run_daily_pipeline(count: int = 3, specific_song: Optional[Dict[str, Any]] =
             "difficulty": article.get("difficulty"),
             "genre": article.get("genre"),
             "pubDate": today_str,
-            "score": score
+            "score": score,
+            "heroImage": article.get("heroImage")
         })
 
         results.append({

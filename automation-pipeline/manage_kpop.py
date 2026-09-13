@@ -90,10 +90,65 @@ def cmd_run(count: int = 3):
     ]
     subprocess.run(cmd)
 
+def cmd_images():
+    print_banner()
+    print("🎨 Scanning and generating missing thumbnails & illustrations for all posts...")
+    from pathlib import Path
+    import yaml
+    from modules.thumbnail_generator import generate_thumbnail_for_post
+    from modules.article_image_generator import generate_and_integrate_article_images
+
+    blog_dir = Path(PIPELINE_DIR).parent / "blog-frontend" / "src" / "content" / "blog"
+    md_files = sorted(blog_dir.glob("*.md"))
+    print(f"Total articles found: {len(md_files)}")
+
+    updated = 0
+    for mf in md_files:
+        slug = mf.stem
+        text = mf.read_text(encoding="utf-8")
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+        fm_raw, body = parts[1], parts[2]
+        try:
+            fm = yaml.safe_load(fm_raw) or {}
+        except Exception:
+            continue
+
+        post_data = {
+            "slug": slug,
+            "title": fm.get("title", ""),
+            "artist": fm.get("artist", "K-Pop Artist"),
+            "songTitle": fm.get("songTitle", ""),
+            "hangulTitle": fm.get("hangulTitle", ""),
+            "difficulty": fm.get("difficulty", "Beginner"),
+            "genre": fm.get("genre", "Dance & Pop"),
+            "chartRank": fm.get("chartRank"),
+            "chartSource": fm.get("chartSource", "Melon Top 100"),
+        }
+        thumb_url = generate_thumbnail_for_post(post_data)
+        fm["heroImage"] = thumb_url
+
+        article_obj = {
+            "songTitle": fm.get("songTitle", ""),
+            "artist": fm.get("artist", ""),
+            "difficulty": fm.get("difficulty", "Beginner"),
+            "genre": fm.get("genre", "Dance & Pop"),
+            "markdown_content": body.strip()
+        }
+        updated_body, imgs = generate_and_integrate_article_images(article_obj, slug)
+
+        new_fm_str = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False)
+        new_full_content = f"---\n{new_fm_str}---\n\n{updated_body}\n"
+        mf.write_text(new_full_content, encoding="utf-8")
+        updated += 1
+
+    print(f"✨ Successfully refreshed thumbnails and illustrations for {updated} posts!")
+
 def main():
     parser = argparse.ArgumentParser(description="K-Pop Hangul Blog Management CLI")
-    parser.add_argument("action", choices=["status", "charts", "candidates", "run"], nargs="?", default="status",
-                        help="Action to perform (status, charts, candidates, run)")
+    parser.add_argument("action", choices=["status", "charts", "candidates", "run", "images"], nargs="?", default="status",
+                        help="Action to perform (status, charts, candidates, run, images)")
     parser.add_argument("--count", type=int, default=3, help="Number of songs for pipeline run")
 
     args = parser.parse_args()
@@ -106,6 +161,8 @@ def main():
         cmd_candidates()
     elif args.action == "run":
         cmd_run(count=args.count)
+    elif args.action == "images":
+        cmd_images()
 
 if __name__ == "__main__":
     main()

@@ -56,9 +56,26 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
 }).format(pubDate);
+
+const resolvedHeroImage = heroImage && heroImage.startsWith('/') ? `${base}${heroImage}` : heroImage;
+const thumbnailSrc = heroImage && heroImage !== '/images/default-hero.svg'
+  ? resolvedHeroImage
+  : `${base}/og/${slug}.svg`;
 ---
 
 <article class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col group">
+  {thumbnailSrc && (
+    <a href={`${base}/blog/${slug}/`} class="relative block overflow-hidden aspect-[1200/630] bg-slate-950 border-b border-slate-100">
+      <img
+        src={thumbnailSrc}
+        alt={title}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        loading="lazy"
+        width="1200"
+        height="630"
+      />
+    </a>
+  )}
   <div class="p-6 flex-1 flex flex-col">
     <!-- Top Metadata Badges -->
     <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
