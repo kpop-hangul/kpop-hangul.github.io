@@ -1,29 +1,11 @@
 [
   {
-    "rank": 2,
+    "rank": 4,
     "chartSource": "Melon Top 100",
     "artist": "아이오아이 (I.O.I)",
     "title": "갑자기",
     "album": "I.O.I 3rd MINI ALBUM [I.O.I : LOOP]",
     "genre": "Dance & Pop",
-    "difficulty": "Intermediate"
-  },
-  {
-    "rank": 5,
-    "chartSource": "Spotify Daily Top",
-    "artist": "IU",
-    "title": "Unknown Planet",
-    "album": "",
-    "genre": "Ballad & OST",
-    "difficulty": "Intermediate"
-  },
-  {
-    "rank": 6,
-    "chartSource": "Spotify Daily Top",
-    "artist": "IU",
-    "title": "Dear my crazy soulmate",
-    "album": "",
-    "genre": "Ballad & OST",
     "difficulty": "Intermediate"
   }
 ]

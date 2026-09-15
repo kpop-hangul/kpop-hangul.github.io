@@ -207,6 +207,18 @@ class TelegramNotifier:
         artist = escape(str(article.get("artist", "")))
         song_title = escape(str(article.get("songTitle", "")))
 
+        # 사람이 직접 수정할 포인트
+        points = review.get("human_edit_points") or article.get("human_edit_points") or []
+        points_text = ""
+        if points:
+            p_lines = []
+            for p in points[:3]:
+                idx = p.get("index", "")
+                m = p.get("marker", "")
+                rec = p.get("recommendation") or p.get("guide") or ""
+                p_lines.append(f"  • <b>{escape(str(m[:40]))}</b>\n    ↳ <i>{escape(str(rec[:45]))}</i>")
+            points_text = f"💡 <b>[사람이 직접 채울 추천 위치]</b>:\n" + "\n".join(p_lines) + "\n\n"
+
         msg = (f"🎵 <b>[K-Pop 한글 학습 초안 검토 및 승인 요청]</b>\n"
                f"━━━━━━━━━━━━━━━━━━━━\n"
                f"📌 <b>곡명</b>: <b>{artist} - {song_title}</b>\n"
@@ -214,12 +226,14 @@ class TelegramNotifier:
                f"🆔 <b>초안 ID</b>: <code>{escape(draft_id)}</code>\n"
                f"📊 <b>감수 점수</b>: <b>{score}점</b> ({verdict})\n"
                f"🖼️ <b>포함 에셋</b>: 썸네일 1장 + 학습 다이어그램 2장 탑재 완료\n\n"
+               f"{points_text}"
                f"📋 <b>편집 총평</b>:\n{summary}\n\n"
                f"━━━━━━━━━━━━━━━━━━━━\n"
-               f"💡 <i>초안 본문과 다이어그램을 확인하신 후 승인해주세요.</i>")
+               f"💡 <i>초안 본문과 다이어그램을 확인하신 후 직접 수정하거나 바로 승인해주세요.</i>")
 
         return self._send_message(msg, {"inline_keyboard": [
-            [{"text": "📖 본문 초안 보기", "callback_data": f"view_draft:{draft_id}"}],
+            [{"text": "📖 본문 초안 보기", "callback_data": f"view_draft:{draft_id}"},
+             {"text": "✏️ 본문 직접 수정", "callback_data": f"edit_draft:{draft_id}"}],
             [{"text": "✅ 검토 후 즉시 승인 및 발행", "callback_data": f"approve:{draft_id}"},
              {"text": "❌ 발행 보류", "callback_data": f"reject:{draft_id}"}]]})
 
@@ -284,6 +298,114 @@ class TelegramNotifier:
 🔗 <b>블로그 주소</b>: <a href="{self.site_url}">{self.site_url}</a>
 💡 <i>매일 정해진 스케줄(아침 07:00 작성, 08:00/19:00 브리핑)로 무인 운영됩니다.</i>"""
 
+        return self._send_message(msg)
+
+    # -------------------------------------------------------------
+    # 3-1. 오늘 블로그 클릭 & 뷰(View) 트래픽 일일 보고
+    # -------------------------------------------------------------
+    def generate_click_view_report_text(self, traffic_data: Dict[str, Any]) -> str:
+        """
+        오늘의 실질적인 클릭 및 조회수(PV/UV) 카운트 보고서 텍스트 생성
+        """
+        now_str = datetime.now().strftime("%Y-%m-%d")
+        today_views = traffic_data.get("today_views", 0)
+        today_uv = traffic_data.get("today_uv", 0)
+        today_clicks = traffic_data.get("today_clicks", 0)
+        ctr = traffic_data.get("ctr", 0.0)
+        cumulative = traffic_data.get("cumulative_views", 0)
+        growth = traffic_data.get("growth_vs_yesterday", 0.0)
+        total_posts = traffic_data.get("total_posts", 0)
+
+        growth_sign = "+" if growth >= 0 else ""
+        growth_badge = f"{growth_sign}{growth}%"
+
+        # 카테고리별 유입 점유율
+        cat_views = traffic_data.get("category_views", {})
+        cat_lines = []
+        for cat_name, c_data in list(cat_views.items())[:6]:
+            cat_pv = c_data.get("views", 0)
+            cat_ratio = c_data.get("ratio", 0.0)
+            cat_lines.append(f"  • 🏷️ <b>{cat_name}</b>: <code>{cat_pv:,} PV</code> ({cat_ratio}%)")
+        cat_html = "\n".join(cat_lines) if cat_lines else "  • 집계 중\n"
+
+        # 인기 포스트 TOP 3
+        top_posts = traffic_data.get("top_posts", [])
+        top_lines = []
+        for i, p in enumerate(top_posts[:3], 1):
+            p_title = p.get("title", "")
+            p_views = p.get("views", 0)
+            p_clicks = p.get("clicks", 0)
+            p_slug = p.get("slug", "")
+            post_url = f"{self.site_url.rstrip('/')}/blog/{p_slug}/" if p_slug else self.site_url
+            top_lines.append(f"  <b>{i}.</b> <a href=\"{post_url}\">{p_title}</a>\n     └ 👁️ <code>{p_views:,} 뷰</code> | 🖱️ <code>{p_clicks} 클릭</code>")
+        top_html = "\n".join(top_lines) if top_lines else "  • 집계 중\n"
+
+        is_measured = traffic_data.get("is_measured", False)
+        latest_date = traffic_data.get("latest_active_date", "")
+        latest_views = traffic_data.get("latest_active_views", 0)
+        total_uniques_14d = traffic_data.get("total_uniques_14d", 0)
+        today_posts = traffic_data.get("today_posts", 0)
+
+        # 3대 실측 소스 연동 현황
+        sources = traffic_data.get("sources", {})
+        gh_info = sources.get("github", {})
+        goat_info = sources.get("goatcounter", {})
+        ga_info = sources.get("ga4", {})
+
+        gh_status = gh_info.get('status', '연동 대기')
+        gh_detail = gh_info.get('detail', '')
+        goat_status = goat_info.get('status', '연동 활성')
+        goat_dash = goat_info.get('dashboard', '')
+        ga_status = ga_info.get('status', '대기')
+        ga_detail = ga_info.get('detail', '')
+
+        if is_measured:
+            subtitle = "📢 <i>GitHub Pages 공식 Traffic API 및 실시간 웹 분석 실측치로 100% 정합 집계된 보고서입니다.</i>"
+            today_note = "<i>(GitHub 서버 당일 집계 주기 반영 대기)</i>" if today_views == 0 else f"({growth_badge} 전일비)"
+            summary_title = "📊 <b>공식 실측 트래픽 요약 (GitHub 공식 기준)</b>:"
+            cumulative_line = f"  • 📚 <b>최근 14일 공식 누적 뷰</b>: <b>{cumulative:,} PV</b> ({total_uniques_14d}명 순방문)"
+            if latest_date and today_views == 0:
+                cumulative_line += f"\n  • ⏱️ <b>가장 최근 활성 유입일</b>: <code>{latest_date}</code> ({latest_views} PV)"
+        else:
+            subtitle = "📢 <i>현재 애드센스 심사/등록 준비 단계로, 트래픽 유입 지표를 카운트하여 보고합니다.</i>"
+            today_note = f"({growth_badge} 전일비)"
+            summary_title = "📊 <b>오늘의 핵심 트래픽 요약</b>:"
+            cumulative_line = f"  • 📚 <b>사이트 누적 총 조회수</b>: <b>{cumulative:,} PV</b> (총 {total_posts}개 포스트)"
+
+        msg = f"""📈 <b>[{self.site_title} 오늘 트래픽 & 클릭/뷰 보고]</b> ({now_str})
+━━━━━━━━━━━━━━━━━━━━
+{subtitle}
+
+{summary_title}
+  • 👁️ <b>오늘 실측 페이지뷰 (PV)</b>: <b>{today_views:,} 회</b> {today_note}
+  • 👥 <b>오늘 실측 순 방문자 (UV)</b>: <b>{today_uv:,} 명</b>
+  • 🖱️ <b>독자 상호작용 클릭수</b>: <b>{today_clicks:,} 회</b> (클릭률 <code>{ctr:.2f}%</code>)
+{cumulative_line}
+  • 📝 <b>사이트 총 포스트</b>: <b>{total_posts}개</b> (+{today_posts}건 오늘 추가)
+
+📂 <b>카테고리/장르별 점유율</b>:
+{cat_html}
+
+🔥 <b>오늘 주목할 인기 곡 TOP 3</b>:
+{top_html}
+
+━━━━━━━━━━━━━━━━━━━━
+📡 <b>3대 실측 트래픽 트래커 현황</b>:
+  • 🐙 <b>GitHub Pages</b>: {gh_status} <i>({gh_detail})</i>
+  • 🐐 <b>GoatCounter</b>: {goat_status} (<a href="{goat_dash}">실시간 대시보드</a>)
+  • 📊 <b>GA4</b>: {ga_status} <i>({ga_detail})</i>
+
+💡 <b>운영 인사이트</b>:
+• 멜론 & 스포티파이 인기 차트 기반 글로벌 K-Pop 한글 학습 유입 진행 중
+• 독자 클릭률(CTR)이 높은 인기 곡 포스트에 추후 애드센스 광고 최우선 배치 예정
+🌐 <b>블로그 홈</b>: <a href="{self.site_url}">{self.site_url}</a>"""
+        return msg
+
+    def send_click_view_daily_report(self, traffic_data: Dict[str, Any]) -> bool:
+        """
+        애드센스 정식 등록 전, 오늘의 실질적인 클릭 및 조회수(PV/UV) 카운트 일일 보고 발송
+        """
+        msg = self.generate_click_view_report_text(traffic_data)
         return self._send_message(msg)
 
     # -------------------------------------------------------------

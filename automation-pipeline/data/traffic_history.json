@@ -1,0 +1,82 @@
+{
+  "2026-09-16": {
+    "date": "2026-09-16",
+    "is_measured": true,
+    "today_views": 0,
+    "today_uv": 0,
+    "today_clicks": 0,
+    "ctr": 0.0,
+    "cumulative_views": 36,
+    "total_uniques_14d": 3,
+    "latest_active_date": "2026-09-09",
+    "latest_active_views": 3,
+    "total_posts": 19,
+    "today_posts": 0,
+    "category_views": {
+      "Intermediate (Level 2)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 78.9
+      },
+      "Beginner (Level 1)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 10.5
+      },
+      "Advanced (Level 3)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 10.5
+      }
+    },
+    "top_posts": [
+      {
+        "title": "Learn Korean with I.O.I - 'Suddenly (갑자기)': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-13-ioi-suddenly",
+        "category": "Intermediate (Level 2)",
+        "views": 0,
+        "clicks": 0
+      },
+      {
+        "title": "Learn Korean with HANRORO - '0+0': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-13-hanroro-00",
+        "category": "Intermediate (Level 2)",
+        "views": 0,
+        "clicks": 0
+      },
+      {
+        "title": "Learn Korean with IU - ''Unknown Planet'': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-13-iu-unknown-planet",
+        "category": "Intermediate (Level 2)",
+        "views": 0,
+        "clicks": 0
+      }
+    ],
+    "growth_vs_yesterday": 0.0,
+    "sources": {
+      "github": {
+        "name": "GitHub Pages Traffic API",
+        "status": "🟢 실측 연동됨",
+        "detail": "14일간 누적 36회 방문 (3명 순방문)",
+        "today_views": 0,
+        "today_uniques": 0,
+        "total_views_14d": 36,
+        "total_uniques_14d": 3,
+        "latest_active_date": "2026-09-09",
+        "latest_active_views": 3
+      },
+      "goatcounter": {
+        "name": "GoatCounter (초경량 실시간)",
+        "status": "🟢 프론트엔드 연동 활성",
+        "dashboard": "https://kpophangul.goatcounter.com",
+        "tag": "gc.zgo.at/count.js (kpophangul)"
+      },
+      "ga4": {
+        "name": "Google Analytics 4",
+        "status": "🟢 측정 활성",
+        "ga_id": "G-WE6WVHJ03S",
+        "detail": "측정 ID: G-WE6WVHJ03S"
+      }
+    }
+  }
+}

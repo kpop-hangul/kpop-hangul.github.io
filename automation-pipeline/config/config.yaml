@@ -75,5 +75,5 @@ github:
   repo_root: "../"
   blog_content_dir: "../blog-frontend/src/content/blog"
   auto_git_commit: true
-  auto_git_push: false
+  auto_git_push: true
 

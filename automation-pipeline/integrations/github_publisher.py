@@ -45,6 +45,20 @@ class GitHubPublisher:
 
         return f"{today_str}-{keyword_slug}"
 
+    def _path(self, slug):
+        if not isinstance(slug, str) or not re.fullmatch(r"[a-zA-Z0-9가-힣_-]+", slug):
+            raise ValueError("유효하지 않은 게시글 슬러그")
+        return Path(self.content_dir) / f"{slug}.md"
+
+    @staticmethod
+    def _read_post(path):
+        text = path.read_text(encoding="utf-8")
+        match = re.match(r"\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|$)(.*)\Z", text, re.DOTALL)
+        if match:
+            metadata = yaml.safe_load(match.group(1))
+            return metadata if isinstance(metadata, dict) else {}, match.group(2)
+        return {}, text
+
     def publish_article(self, article: Dict[str, Any]) -> str:
         """
         승인된 아티클 딕셔너리를 썸네일 및 본문 이미지와 함께 마크다운(.md) 파일로 저장하고 Git 커밋
@@ -225,6 +239,60 @@ class GitHubPublisher:
             self._commit_paths(paths, f"fix(blog): update post - {title[:40]}", slug=final_slug)
 
         return new_filepath, final_slug
+
+    def delete_article(self, slug, *, human_approved=False):
+        """발행된 블로그 글을 삭제 (마크다운 + 썸네일 + 본문 이미지)."""
+        if human_approved is not True:
+            raise PermissionError("글 삭제는 사람의 명시적 승인이 필요합니다.")
+        path = self._path(slug)
+        title = slug
+        if path.exists():
+            try:
+                meta, _ = self._read_post(path)
+                title = meta.get("title", slug)
+            except Exception:
+                pass
+        else:
+            candidates = list(Path(self.content_dir).glob(f"*{slug}*.md"))
+            if candidates:
+                path = candidates[0]
+                try:
+                    meta, _ = self._read_post(path)
+                    title = meta.get("title", slug)
+                except Exception:
+                    pass
+
+        # Collect all related files
+        removed_paths = [str(path)]
+        thumb_path = Path(self.repo_root) / f"blog-frontend/public/images/thumbnails/{slug}.svg"
+        removed_paths.append(str(thumb_path))
+        article_img_dir = Path(self.repo_root) / "blog-frontend/public/images/articles"
+        if article_img_dir.exists():
+            for img_file in article_img_dir.glob(f"*{slug}*"):
+                removed_paths.append(str(img_file))
+
+        # 1. Git remove tracked files safely using --ignore-unmatch
+        if self.auto_commit:
+            try:
+                subprocess.run(["git", "rm", "-f", "--ignore-unmatch", "--", *removed_paths], cwd=self.repo_root, check=True)
+            except Exception:
+                pass
+
+        # 2. Delete any remaining physical files from disk
+        for p in removed_paths:
+            try:
+                Path(p).unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        # 3. Git commit & push if changes were staged
+        if self.auto_commit:
+            diff = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=self.repo_root)
+            if diff.returncode == 1:
+                subprocess.run(["git", "commit", "-m", f"fix(blog): delete post - {title[:60]}"], cwd=self.repo_root, check=True)
+            if self.auto_push:
+                subprocess.run(["git", "push", "origin", "HEAD:main"], cwd=self.repo_root, check=True)
+        return title
 
     def _git_commit_and_push(self, filepath: str, title: str, slug: Optional[str] = None):
         """Git 커밋 실행 (썸네일 및 본문 이미지 자동 포함)"""

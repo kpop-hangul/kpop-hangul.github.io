@@ -99,3 +99,10 @@ Your job is to rigorously evaluate an AI-generated K-Pop Korean learning article
   "summary_for_user": "2-3 sentences evaluating the educational quality of the lesson."
 }
 """
+
+EDITORIAL_RULES = """K-Pop Korean Language Learning Blog System Editorial Rules:
+- Educational accuracy: Accurate Hangul spelling, standard Revised Romanization, precise English translations.
+- Clear grammar formulas and high-utility spoken example sentences.
+- Engaging cultural context and practical pronunciation breakdown (batchim, liaison).
+- Fair use compliance: Only quote key excerpts/chorus, focus 80% on linguistics and pedagogical breakdown.
+"""

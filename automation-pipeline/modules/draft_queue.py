@@ -69,6 +69,12 @@ class DraftApprovalQueue:
         slug_seed = re.sub(r"[^a-zA-Z0-9가-힣]", "", title)[:10] or "post"
         draft_id = f"draft_{now.strftime('%Y%m%d_%H%M%S')}_{slug_seed}"
 
+        human_edit_points = (
+            review_report.get("human_edit_points")
+            or article.get("human_edit_points")
+            or []
+        )
+
         entry = {
             "draft_id": draft_id,
             "title": title,
@@ -80,6 +86,8 @@ class DraftApprovalQueue:
             "article": article,
             "review": review_report,
             "review_report": review_report,
+            "human_edit_points": human_edit_points,
+            "change_history": [],
             "published_at": None,
             "post_slug": None,
             "published_url": None,
@@ -91,6 +99,52 @@ class DraftApprovalQueue:
         self._save_data(data)
         print(f"📥 [DraftQueue] 신규 초안 대기 큐 등록 완료: {draft_id} (제목: {title[:25]}...)")
         return draft_id
+
+    def update_draft_content(
+        self,
+        draft_id: str,
+        new_article: Dict[str, Any],
+        change_summary: Optional[str] = None,
+        new_review: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """대기 큐에 있는 초안 본문/내용을 사람이 직접 수정/피드백 반영한 내용으로 업데이트"""
+        data = self._load_data()
+        target = draft_id.strip()
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        for d in data:
+            if d.get("draft_id") == target or d.get("draft_id", "").endswith(target) or target in d.get("draft_id", ""):
+                d["article"] = new_article
+                if "title" in new_article and new_article["title"].strip():
+                    d["title"] = new_article["title"].strip()
+                if "category" in new_article and new_article["category"].strip():
+                    d["category"] = new_article["category"].strip()
+
+                d["updated_at"] = now_str
+                if change_summary:
+                    d["change_summary"] = change_summary
+                    if "change_history" not in d or not isinstance(d["change_history"], list):
+                        d["change_history"] = []
+                    d["change_history"].append({
+                        "timestamp": now_str,
+                        "summary": change_summary
+                    })
+
+                # 남은 human_edit_points 갱신
+                body = new_article.get("markdown_content", "")
+                markers = re.findall(r"(\[(?:💡|🔍)[^\]\n]+\])", body)
+                d["human_edit_points"] = [
+                    {"index": i, "marker": m, "recommendation": "수정/확인 필요"}
+                    for i, m in enumerate(markers, 1)
+                ]
+
+                if new_review:
+                    d["review"] = new_review
+                    d["review_report"] = new_review
+
+                return self._save_data(data)
+        return False
+
 
     def list_pending(self) -> List[Dict[str, Any]]:
         """승인 대기(pending_review) 상태인 초안 목록 반환 (최신순)"""

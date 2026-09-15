@@ -190,10 +190,24 @@ def cmd_reject(draft_id: str):
     else:
         print(f"⚠️ Draft {draft_id} not found.")
 
+def cmd_traffic():
+    print_banner()
+    from agents.performance_tracker import PerformanceTracker
+    from daily_kpop_pipeline import load_config
+    config = load_config()
+    tracker = PerformanceTracker(config)
+    traffic = tracker.get_click_view_statistics()
+    print("📈 Today Traffic & Views Statistics:")
+    print(f"  • Today Views (PV): {traffic.get('today_views', 0):,} PV")
+    print(f"  • Today Uniques (UV): {traffic.get('today_uv', 0):,} UV")
+    print(f"  • Reader Clicks: {traffic.get('today_clicks', 0):,} ({traffic.get('ctr', 0.0):.2f}% CTR)")
+    print(f"  • Cumulative 14d Views: {traffic.get('cumulative_views', 0):,} PV")
+    print(f"  • Total Blog Posts: {traffic.get('total_posts', 0)}")
+
 def main():
     parser = argparse.ArgumentParser(description="K-Pop Hangul Blog Management CLI")
-    parser.add_argument("action", choices=["status", "charts", "candidates", "run", "images", "queue", "approve", "reject"], nargs="?", default="status",
-                        help="Action to perform (status, charts, candidates, run, images, queue, approve, reject)")
+    parser.add_argument("action", choices=["status", "charts", "candidates", "run", "images", "queue", "approve", "reject", "traffic"], nargs="?", default="status",
+                        help="Action to perform (status, charts, candidates, run, images, queue, approve, reject, traffic)")
     parser.add_argument("id", nargs="?", default=None, help="Draft ID for approve/reject")
     parser.add_argument("--count", type=int, default=1, help="Number of songs for pipeline run (default: 1)")
 
@@ -215,6 +229,9 @@ def main():
         cmd_approve(args.id)
     elif args.action == "reject":
         cmd_reject(args.id)
+    elif args.action == "traffic":
+        cmd_traffic()
 
 if __name__ == "__main__":
     main()
+
