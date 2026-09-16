@@ -18,11 +18,11 @@ site:
   default_language: "en"
   theme_color: "#6366f1"
 
-# 3. Monetization & Ads (Disabled by default per setup constraints)
+# 3. Monetization & Ads
 adsense:
-  enabled: false
-  publisher_id: ""
-  auto_ads: false
+  enabled: true
+  publisher_id: "pub-3054784185688248"
+  auto_ads: true
   slots:
     top_banner: ""
     in_article_1: ""
