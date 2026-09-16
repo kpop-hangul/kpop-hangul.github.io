@@ -34,7 +34,7 @@ config = load_config()
 _load_env_file()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 SITE_TITLE = config.get("site", {}).get("title", "K-Pop 한글 (K-Pop Hangul)")
-SITE_URL = config.get("site", {}).get("url", "https://kpop-hangul.github.io").rstrip("/")
+SITE_URL = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://absianp.github.io/kpop-hangul.github.io")).rstrip("/")
 
 # Chat session storage: { chat_id: { "state": ..., "topic": ..., "draft": ..., "slug": ..., "feedbacks": [...], "busy": ..., "action": ... } }
 sessions = {}
@@ -133,6 +133,7 @@ async def handle_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 🤖 <b>기본 명령어 목록:</b>
 
 • <code>/agent</code> : 라즈베리파이 자동화 에이전트 관제 (스케줄 확인, 시작/중지, 즉시실행)
+• <code>/run</code> : 멜론/스포티파이 차트 기반 K-Pop 학습 글 작성 파이프라인 지금 즉시 가동
 • <code>/traffic</code> (또는 <code>/views</code>, <code>/clicks</code>) : 오늘 실시간 클릭수 및 뷰(PV/UV) 트래픽 보고서 즉시 조회
 • <code>/status</code> : 라즈베리파이 상태, 타이머 스케줄, 대기 큐 및 세션 조회
 • <code>/queue</code> : 발행 대기 중인 초안 큐 목록 및 감수 점수 조회
@@ -615,6 +616,27 @@ async def handle_agent_command(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(f"⚠️ 알 수 없는 액션: {action}\n(가능 액션: list, start, stop, restart, run)", parse_mode="HTML")
 
 @require_allowed_chat
+async def handle_run_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """K-Pop 한글 파이프라인 지금 즉시 백그라운드 가동"""
+    target_key = context.args[0].lower() if context.args else "kpop"
+    mgr = AgentManager()
+    ok, res_msg = mgr.trigger_run_now(target_key)
+    if ok:
+        await update.message.reply_text(
+            f"🚀 <b>[K-Pop 한글 파이프라인 백그라운드 즉시 가동]</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎵 멜론 Top 100 및 스포티파이 실시간 차트 데이터를 수집하여 새 K-Pop 한글 학습 레슨을 작성합니다.\n\n"
+            f"• <b>자동 수행 작업</b>:\n"
+            f"  1. 멜론/스포티파이 상위 인기곡 선정\n"
+            f"  2. 핵심 가사 해설, 어휘 표, 문법 분석 및 퀴즈 생성\n"
+            f"  3. 전용 SVG 썸네일 및 WebP 학습 다이어그램 2종 자동 제작\n"
+            f"  4. <b>초안 감수 보고서(3장 사진 앨범+승인 버튼)</b> 도착 대기!\n\n"
+            f"💡 <i>작업이 끝나면 자동으로 텔레그램 알림이 전송됩니다.</i>",
+            parse_mode="HTML"
+        )
+    else:
+        await update.message.reply_text(f"❌ 파이프라인 가동 실패: {res_msg}", parse_mode="HTML")
+
+@require_allowed_chat
 async def handle_review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     queue = DraftApprovalQueue()
@@ -689,6 +711,19 @@ async def route_message(message, user_text, context):
                     self.reply_text = m.reply_text
             message = Msg(message)
         await handle_agent_command(DummyUpdate(), DummyContext())
+        return
+
+    # 0-1-1. Run/Schedule immediate execution natural language trigger
+    if stripped.startswith("/run") or any(kw in stripped for kw in ["즉시 시작", "즉시 실행", "스케줄 시작", "지금 시작", "지금 실행", "파이프라인 실행", "포스팅 시작", "새 글 써줘", "새 글 작성해줘", "글 작성 시작"]):
+        class DummyContext:
+            args = []
+        class DummyUpdate:
+            effective_chat = message.chat
+            class Msg:
+                def __init__(self, m):
+                    self.reply_text = m.reply_text
+            message = Msg(message)
+        await handle_run_command(DummyUpdate(), DummyContext())
         return
 
     # 0-2. Queue Draft Direct Editing Session Feedback
@@ -1804,6 +1839,7 @@ async def post_init(application):
         BotCommand("queue", "발행 대기 초안 목록 조회"),
         BotCommand("reject", "대기 초안 발행 보류"),
         BotCommand("review", "초안 AI 감수 보고서 조회"),
+        BotCommand("run", "🚀 K-Pop 글 작성 파이프라인 즉시 가동"),
         BotCommand("status", "서버 상태, 스케줄 & 대기 큐 조회"),
         BotCommand("traffic", "실시간 클릭수 & 뷰 트래픽 보고서"),
         BotCommand("write", "새 블로그 글 작성 기획"),
@@ -1828,6 +1864,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", handle_help_command))
     app.add_handler(CommandHandler(["agent", "agents"], handle_agent_command))
+    app.add_handler(CommandHandler(["run", "publish_now", "start_pipeline"], handle_run_command))
     app.add_handler(CommandHandler("status", handle_status_command))
     app.add_handler(CommandHandler(["traffic", "views", "clicks", "report"], handle_traffic_command))
     app.add_handler(CommandHandler("cancel", handle_cancel))

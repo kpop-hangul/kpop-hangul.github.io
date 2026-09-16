@@ -5,8 +5,8 @@
     "shortName": "K-Pop Hangul",
     "slogan": "Master Korean Lyrics, Grammar & Vocabulary with K-Pop Hits",
     "description": "Learn the Korean language step-by-step through top charting K-Pop songs from Melon and Spotify. Explore song lyrics breakdowns, Hangul grammar, vocabulary, and pronunciation by genre, artist, and difficulty.",
-    "url": "https://kpop-hangul.github.io",
-    "basePath": "/",
+    "url": "https://absianp.github.io/kpop-hangul.github.io",
+    "basePath": "/kpop-hangul.github.io",
     "author": "K-Pop Hangul Team"
   },
   "categories": {
@@ -25,7 +25,7 @@
     "gumroadUrl": ""
   },
   "telegram": {
-    "botUsername": ""
+    "botUsername": "kpop_hangul_bot"
   },
   "ai": {
     "provider": "antigravity_cli",

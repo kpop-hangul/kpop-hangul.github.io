@@ -9,9 +9,9 @@ from typing import Dict, Any, Optional
 
 def _load_env_file():
     env_paths = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", ".env")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../config/.env")),
-        os.path.abspath(os.path.join(os.path.dirname(__file__), ".env")),
-        os.path.expanduser("~/auto_blog_system/automation-pipeline/config/.env")
     ]
     for path in env_paths:
         if os.path.exists(path):
@@ -21,8 +21,8 @@ def _load_env_file():
                         line = line.strip()
                         if line and not line.startswith("#") and "=" in line:
                             k, v = line.split("=", 1)
-                            if k.strip() not in os.environ or not os.environ[k.strip()]:
-                                os.environ[k.strip()] = v.strip()
+                            os.environ[k.strip()] = v.strip()
+                break
             except Exception:
                 pass
 
@@ -42,9 +42,7 @@ class TelegramNotifier:
         telegram_cfg = config.get("telegram", {})
         self.enabled = telegram_cfg.get("enabled", True)
         self.bot_token = telegram_cfg.get("bot_token") or os.getenv("TELEGRAM_BOT_TOKEN", "")
-        self.chat_id = str(telegram_cfg.get("chat_id") or os.getenv("TELEGRAM_CHAT_ID", ""))
-        self.site_url = config.get("site", {}).get("url", "https://kpop-hangul.github.io")
-        self.api_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
+        self.site_url = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://absianp.github.io/kpop-hangul.github.io")).rstrip("/")
 
     def _send_message(self, text: str, reply_markup: Optional[Dict] = None) -> bool:
         if not self.bot_token or not self.chat_id:

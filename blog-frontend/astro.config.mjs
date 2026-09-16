@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://kpop-hangul.github.io',
-  base: '/',
+  site: 'https://absianp.github.io',
+  base: '/kpop-hangul.github.io',
   trailingSlash: 'always',
   build: {
     format: 'directory',

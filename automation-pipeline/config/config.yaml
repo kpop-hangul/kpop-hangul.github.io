@@ -14,7 +14,7 @@ site:
   title: "K-Pop Hangul | Learn Korean with K-Pop Hits"
   description: "Learn Korean vocabulary, grammar, and pronunciation through top charting K-Pop song lyrics from Melon and Spotify."
   author: "K-Pop Hangul Team"
-  url: "https://kpop-hangul.github.io"
+  url: "https://absianp.github.io/kpop-hangul.github.io"
   default_language: "en"
   theme_color: "#6366f1"
 
@@ -68,6 +68,7 @@ agent:
 telegram:
   enabled: true
   bot_token: ""
+  bot_username: "kpop_hangul_bot"
   chat_id: "5017406279"
 
 # 7. Deployment & Paths
