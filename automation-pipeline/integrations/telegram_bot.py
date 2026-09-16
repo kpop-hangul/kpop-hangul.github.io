@@ -42,7 +42,7 @@ class TelegramNotifier:
         telegram_cfg = config.get("telegram", {})
         self.enabled = telegram_cfg.get("enabled", True)
         self.bot_token = telegram_cfg.get("bot_token") or os.getenv("TELEGRAM_BOT_TOKEN", "")
-        self.site_url = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://absianp.github.io/kpop-hangul.github.io")).rstrip("/")
+        self.site_url = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://kpop-hangul.github.io")).rstrip("/")
 
     def _send_message(self, text: str, reply_markup: Optional[Dict] = None) -> bool:
         if not self.bot_token or not self.chat_id:

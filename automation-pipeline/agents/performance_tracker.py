@@ -231,7 +231,7 @@ class PerformanceTracker:
         3대 실측 트래픽 소스 (GitHub Traffic API, GoatCounter, Google Analytics 4) 상태 및 실측 데이터 조회
         """
         github_token = os.getenv("GITHUB_TOKEN") or self.config.get("github", {}).get("token", "")
-        repo = os.getenv("GITHUB_REPO") or self.config.get("github", {}).get("repo", "absianp/kpop-hangul.github.io")
+        repo = os.getenv("GITHUB_REPO") or self.config.get("github", {}).get("repo", "kpop-hangul/kpop-hangul.github.io")
 
         github_result = {
             "name": "GitHub Pages Traffic API",

@@ -203,5 +203,31 @@
     "pubDate": "2026-09-13",
     "score": 90,
     "heroImage": "/images/thumbnails/2026-09-13-hanroro-00.svg"
+  },
+  {
+    "artist": "아이오아이 (I.O.I)",
+    "songTitle": "갑자기 (Suddenly)",
+    "title": "Learn Korean with I.O.I - '갑자기 (Suddenly)': Lyrics, Vocabulary & Grammar Breakdown",
+    "slug": "2026-09-15-아이오아이-갑자기",
+    "chartSource": "Melon Top 100",
+    "chartRank": 4,
+    "difficulty": "Intermediate",
+    "genre": "Dance & Pop",
+    "pubDate": "2026-09-16",
+    "score": 90,
+    "heroImage": "/images/thumbnails/2026-09-15-아이오아이-갑자기.svg"
+  },
+  {
+    "artist": "RESCENE",
+    "songTitle": "Deja Vu",
+    "title": "Learn Korean with RESCENE - 'Deja Vu': Lyrics, Vocabulary & Grammar Breakdown",
+    "slug": "2026-09-14-rescene-deja-vu",
+    "chartSource": "Spotify Daily Top",
+    "chartRank": 11,
+    "difficulty": "Beginner",
+    "genre": "Dance & Pop",
+    "pubDate": "2026-09-16",
+    "score": 90,
+    "heroImage": "/images/thumbnails/2026-09-14-rescene-deja-vu.svg"
   }
 ]

@@ -23,8 +23,8 @@ def load_config(config_path: str = "config/config.yaml") -> dict:
         return yaml.safe_load(f)
 
 def run_auto_pipeline(config: dict, auto_approve: bool = True, target_category: str = None):
-    site_title = config.get("site", {}).get("title", "앱시안(absian)")
-    site_url = config.get("site", {}).get("url", "https://absianp.github.io")
+    site_title = config.get("site", {}).get("title", "K-Pop 한글 (K-Pop Hangul)")
+    site_url = config.get("site", {}).get("url", "https://kpop-hangul.github.io")
     print("=" * 60)
     print(f"🤖 [{site_title}] 에이전트 파이프라인 가동 시작")
     print(f"📌 블로그: {site_title} ({site_url})")
@@ -118,8 +118,8 @@ def run_dryrun_pipeline(config: dict):
         telegram.send_health_report({"error_details": f"🚨 [Dry-run 실패] 파이프라인 에러 감지: {e}"}, is_alert=True)
 
 def run_geeknews_weekly_pipeline(config: dict):
-    site_title = config.get("site", {}).get("title", "앱시안(absian)")
-    site_url = config.get("site", {}).get("url", "https://absianp.github.io")
+    site_title = config.get("site", {}).get("title", "K-Pop 한글 (K-Pop Hangul)")
+    site_url = config.get("site", {}).get("url", "https://kpop-hangul.github.io")
     print("=" * 60)
     print(f"📰 [{site_title}] 긱뉴스(GeekNews) 주간 테크 브리핑 파이프라인 가동 (매주 금요일 08:00 KST)")
     print(f"📌 블로그: {site_title} ({site_url})")
@@ -262,7 +262,7 @@ def main():
             "faqs": [{"question": "비전공자도 가능한가요?", "answer": "네, 가능합니다."}]
         }
         sample_inspection = {"score": 95, "char_count": 1850}
-        telegram.send_article_published(sample_article, sample_inspection, "https://absianp.github.io/blog/2026-python-automation-routines/")
+        telegram.send_article_published(sample_article, sample_inspection, "https://kpop-hangul.github.io/blog/sample-post/")
 
         stats = tracker.get_site_statistics()
         telegram.send_daily_site_status("morning", stats)

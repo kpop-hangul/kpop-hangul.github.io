@@ -34,7 +34,7 @@ config = load_config()
 _load_env_file()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 SITE_TITLE = config.get("site", {}).get("title", "K-Pop 한글 (K-Pop Hangul)")
-SITE_URL = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://absianp.github.io/kpop-hangul.github.io")).rstrip("/")
+SITE_URL = (os.getenv("SITE_URL") or config.get("site", {}).get("url", "https://kpop-hangul.github.io")).rstrip("/")
 
 # Chat session storage: { chat_id: { "state": ..., "topic": ..., "draft": ..., "slug": ..., "feedbacks": [...], "busy": ..., "action": ... } }
 sessions = {}
