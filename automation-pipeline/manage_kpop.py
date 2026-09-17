@@ -91,59 +91,34 @@ def cmd_run(count: int = 3):
     subprocess.run(cmd)
 
 def cmd_images():
+    """Prepare GPT image updates for existing posts; human approval publishes them."""
     print_banner()
-    print("🎨 Scanning and generating missing thumbnails & illustrations for all posts...")
     from pathlib import Path
     import yaml
-    from modules.thumbnail_generator import generate_thumbnail_for_post
-    from modules.article_image_generator import generate_and_integrate_article_images
+    from daily_kpop_pipeline import load_config
+    from agents.editorial_reviewer import EditorialReviewAgent
+    from modules.gpt_images import prepare_article_images
+    from modules.draft_queue import DraftApprovalQueue
 
-    blog_dir = Path(PIPELINE_DIR).parent / "blog-frontend" / "src" / "content" / "blog"
-    md_files = sorted(blog_dir.glob("*.md"))
-    print(f"Total articles found: {len(md_files)}")
-
-    updated = 0
-    for mf in md_files:
-        slug = mf.stem
-        text = mf.read_text(encoding="utf-8")
-        parts = text.split("---", 2)
-        if len(parts) < 3:
+    config = load_config()
+    queue = DraftApprovalQueue()
+    reviewer = EditorialReviewAgent(config)
+    blog_dir = Path(PIPELINE_DIR).parent / "blog-frontend/src/content/blog"
+    count = 0
+    for path in sorted(blog_dir.glob("*.md")):
+        parts = path.read_text(encoding="utf-8").split("---", 2)
+        if len(parts) != 3:
             continue
-        fm_raw, body = parts[1], parts[2]
-        try:
-            fm = yaml.safe_load(fm_raw) or {}
-        except Exception:
-            continue
+        metadata = yaml.safe_load(parts[1]) or {}
+        article = prepare_article_images({**metadata, "slug": path.stem,
+            "existing_slug": path.stem, "markdown_content": parts[2].strip()}, config)
+        topic = {"title": article["title"], "existing_slug": path.stem}
+        review = reviewer.review_article(article, topic)
+        draft_id = queue.add_draft(article, review, topic, existing_slug=path.stem)
+        print(f"Queued image update: {draft_id} ({path.stem})")
+        count += 1
+    print(f"Prepared {count} image updates. Review and approve each draft to publish.")
 
-        post_data = {
-            "slug": slug,
-            "title": fm.get("title", ""),
-            "artist": fm.get("artist", "K-Pop Artist"),
-            "songTitle": fm.get("songTitle", ""),
-            "hangulTitle": fm.get("hangulTitle", ""),
-            "difficulty": fm.get("difficulty", "Beginner"),
-            "genre": fm.get("genre", "Dance & Pop"),
-            "chartRank": fm.get("chartRank"),
-            "chartSource": fm.get("chartSource", "Melon Top 100"),
-        }
-        thumb_url = generate_thumbnail_for_post(post_data)
-        fm["heroImage"] = thumb_url
-
-        article_obj = {
-            "songTitle": fm.get("songTitle", ""),
-            "artist": fm.get("artist", ""),
-            "difficulty": fm.get("difficulty", "Beginner"),
-            "genre": fm.get("genre", "Dance & Pop"),
-            "markdown_content": body.strip()
-        }
-        updated_body, imgs = generate_and_integrate_article_images(article_obj, slug)
-
-        new_fm_str = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False)
-        new_full_content = f"---\n{new_fm_str}---\n\n{updated_body}\n"
-        mf.write_text(new_full_content, encoding="utf-8")
-        updated += 1
-
-    print(f"✨ Successfully refreshed thumbnails and illustrations for {updated} posts!")
 
 def cmd_queue():
     print_banner()

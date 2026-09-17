@@ -15,6 +15,7 @@ from integrations.telegram_bot import _load_env_file, TelegramNotifier
 from integrations.antigravity_runner import AntigravityRunner
 from agents.performance_tracker import PerformanceTracker
 from modules.draft_queue import DraftApprovalQueue
+from modules.gpt_images import prepare_article_images
 from modules.agent_manager import AgentManager
 from agents.editorial_reviewer import EditorialReviewAgent
 from templates.prompt_templates import EDITORIAL_RULES
@@ -733,7 +734,7 @@ async def route_message(message, user_text, context):
         return
 
     # 1-0. Draft Queue Direct Edit Request by ID (e.g. /edit draft_... or 초안 수정 draft_...)
-    draft_match = re.search(r"draft_\d+_[a-zA-Z0-9가-힣]+", user_text)
+    draft_match = re.search(r"draft_\d+_\d+_[a-zA-Z0-9가-힣]+", user_text)
     if (user_text.strip().startswith("/edit") or "초안 수정" in user_text) and draft_match:
         target_draft_id = draft_match.group(0)
         await start_queue_draft_edit(message, chat_id, target_draft_id, context)
@@ -774,12 +775,12 @@ async def route_message(message, user_text, context):
 async def generate_or_update_topic_plan(message, chat_id, user_input, context, is_update=False):
     if chat_id in sessions:
         invalidate_approvals(sessions[chat_id])
-    loading_text = "🔄 추가 첨언 및 자료를 반영하여 기획안을 보강 중입니다..." if is_update else "⏳ 입력하신 자료를 분석하여 포스팅 기획안을 작성 중입니다. (Antigravity CLI 가동 중...)"
+    loading_text = "🔄 추가 첨언 및 자료를 반영하여 기획안을 보강 중입니다..." if is_update else "⏳ 입력하신 자료를 분석하여 포스팅 기획안을 작성 중입니다. (GPT / Codex CLI 가동 중...)"
     processing_msg = await message.reply_text(loading_text)
 
     session = sessions.get(chat_id, {})
     session["busy"] = True
-    session["action"] = "포스팅 기획안 업데이트 중" if is_update else "새 글 포스팅 기획안 작성 (Antigravity CLI)"
+    session["action"] = "포스팅 기획안 업데이트 중" if is_update else "새 글 포스팅 기획안 작성 (GPT / Codex CLI)"
     session["started_at"] = time.time()
     sessions[chat_id] = session
 
@@ -856,9 +857,9 @@ async def generate_or_update_topic_plan(message, chat_id, user_input, context, i
 
 반드시 마크다운 코드블록(```json) 없이 순수한 JSON으로만 응답하세요.
 """
-        raw_output = runner.generate_text(system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
+        raw_output = await asyncio.to_thread(runner.generate_text, system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
         if not raw_output:
-            raise Exception("Antigravity 파이프라인에서 응답을 생성하지 못했습니다.")
+            raise Exception("GPT 파이프라인에서 응답을 생성하지 못했습니다.")
 
         topic_data = extract_json(raw_output)
 
@@ -948,12 +949,12 @@ async def create_article_draft(chat_id, message_id, context):
 
     status_msg = await context.bot.send_message(
         chat_id=chat_id,
-        text="✍️ <b>Antigravity 에이전트가 주제별 아티클 초안을 작성 중입니다... (약 1~2분 소요)</b>",
+        text="✍️ <b>GPT 에이전트가 주제별 아티클 초안을 작성 중입니다... (약 1~2분 소요)</b>",
         parse_mode="HTML"
     )
 
     session["busy"] = True
-    session["action"] = "주제별 본문 초안 작성 (Antigravity CLI)"
+    session["action"] = "주제별 본문 초안 작성 (GPT / Codex CLI)"
     session["started_at"] = time.time()
     sessions[chat_id] = session
 
@@ -967,7 +968,9 @@ async def create_article_draft(chat_id, message_id, context):
                 f"[사용자 추가 요청] {fb}" for fb in feedbacks[1:]
             ]
 
-        article = writer.write_article(enhanced_topic)
+        article = await asyncio.to_thread(writer.write_article, enhanced_topic)
+        article = await asyncio.to_thread(prepare_article_images, article, config)
+        await asyncio.to_thread(TelegramNotifier(config).send_draft_images, "interactive-preview", article)
         session["draft"] = article
         approval_token = issue_approval(session, "draft")
         session["state"] = "DRAFTED"
@@ -1027,7 +1030,7 @@ async def refine_article_draft(message, chat_id, user_feedback, context):
 
     current_draft = session["draft"]
     session["busy"] = True
-    session["action"] = "본문 피드백/첨언 반영 및 수정 중 (Antigravity CLI)"
+    session["action"] = "본문 피드백/첨언 반영 및 수정 중 (GPT / Codex CLI)"
     session["started_at"] = time.time()
     sessions[chat_id] = session
 
@@ -1068,11 +1071,14 @@ async def refine_article_draft(message, chat_id, user_feedback, context):
   "markdown_content": "수정된 본문 전체 내용 (마크다운 H2, H3, 표, 리스트 포함)"
 }}
 """
-        raw_output = runner.generate_text(system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
+        raw_output = await asyncio.to_thread(runner.generate_text, system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
         if not raw_output:
-            raise Exception("Antigravity 에디터로부터 응답을 받지 못했습니다.")
+            raise Exception("GPT 에디터로부터 응답을 받지 못했습니다.")
 
         updated_draft = extract_json(raw_output)
+        updated_draft = {**session.get("draft", {}), **updated_draft}
+        updated_draft = await asyncio.to_thread(prepare_article_images, updated_draft, config)
+        await asyncio.to_thread(TelegramNotifier(config).send_draft_images, "interactive-preview", updated_draft)
         session["draft"] = updated_draft
         approval_token = issue_approval(session, "draft")
         sessions[chat_id] = session
@@ -1180,6 +1186,8 @@ async def refine_queued_draft(message, chat_id, user_feedback, context):
         await message.reply_text("⚠️ 수정 대상 초안이 없습니다. 다시 선택해주세요.")
         return
 
+    if session.get("busy"):
+        return
     session["busy"] = True
     draft_id = session["draft_id"]
     current_draft = session["draft"]
@@ -1223,16 +1231,20 @@ async def refine_queued_draft(message, chat_id, user_feedback, context):
   "markdown_content": "수정된 본문 전체 내용 (마크다운 H2, H3, 표, 리스트 포함)"
 }}
 """
-        raw_output = runner.generate_text(system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
+        raw_output = await asyncio.to_thread(runner.generate_text, system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
         if not raw_output:
             raise Exception("AI 엔진으로부터 수정 응답을 받지 못했습니다.")
 
         updated_draft = extract_json(raw_output)
+        updated_draft = {**session.get("draft", {}), **updated_draft}
+        updated_draft = await asyncio.to_thread(prepare_article_images, updated_draft, config)
 
         # 큐 업데이트!
         change_summary = updated_draft.get("change_summary", "사용자 직접 수정 및 피드백 반영")
         queue = DraftApprovalQueue()
-        queue.update_draft_content(draft_id, updated_draft, change_summary=change_summary)
+        saved = queue.update_draft_content(draft_id, updated_draft, change_summary=change_summary)
+        if not saved:
+            raise OSError("초안 수정 저장에 실패했습니다")
 
         session["draft"] = updated_draft
         sessions[chat_id] = session
@@ -1355,8 +1367,9 @@ async def execute_batch_publish(chat_id, context):
         queue = DraftApprovalQueue()
         telegram = TelegramNotifier(config)
         for topic in session["topics"]:
-            article = writer.write_article(topic)
-            review = reviewer.review_article(article, topic)
+            article = await asyncio.to_thread(writer.write_article, topic)
+            article = await asyncio.to_thread(prepare_article_images, article, config)
+            review = await asyncio.to_thread(reviewer.review_article, article, topic)
             draft_id = queue.add_draft(article, review, topic=topic)
             completed.append(draft_id)
             telegram.send_review_report(draft_id, article, review)
@@ -1372,7 +1385,7 @@ async def execute_batch_publish(chat_id, context):
 async def process_edit_input(message, user_text, blog_url_match, context, is_update=False):
     if message.chat_id in sessions:
         invalidate_approvals(sessions[message.chat_id])
-    loading_text = "🔄 추가 수정 요청사항을 반영 중입니다..." if is_update else "🔍 수정할 블로그 포스팅을 조회하고 수정안을 기획 중입니다. (Antigravity CLI 가동 중...)"
+    loading_text = "🔄 추가 수정 요청사항을 반영 중입니다..." if is_update else "🔍 수정할 블로그 포스팅을 조회하고 수정안을 기획 중입니다. (GPT / Codex CLI 가동 중...)"
     processing_msg = await message.reply_text(loading_text)
     
     chat_id = message.chat_id
@@ -1403,7 +1416,7 @@ async def process_edit_input(message, user_text, blog_url_match, context, is_upd
             return
 
     session["busy"] = True
-    session["action"] = f"기존 글({slug}) 수정안 기획 (Antigravity CLI)"
+    session["action"] = f"기존 글({slug}) 수정안 기획 (GPT / Codex CLI)"
     session["started_at"] = time.time()
     sessions[chat_id] = session
 
@@ -1460,12 +1473,15 @@ async def process_edit_input(message, user_text, blog_url_match, context, is_upd
   "markdown_content": "수정된 본문 전체 내용 (마크다운 H2, H3, 표, 리스트 포함)"
 }}
 """
-        raw_output = runner.generate_text(system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
+        raw_output = await asyncio.to_thread(runner.generate_text, system_prompt=system_prompt + "\n" + EDITORIAL_RULES, user_prompt=user_prompt)
         if not raw_output:
-            raise Exception("Antigravity 에디터로부터 응답을 받지 못했습니다.")
+            raise Exception("GPT 에디터로부터 응답을 받지 못했습니다.")
 
         modified_data = extract_json(raw_output)
+        modified_data["slug"] = modified_data.get("new_slug") or slug
+        modified_data = await asyncio.to_thread(prepare_article_images, modified_data, config)
         session["slug"] = slug
+        await asyncio.to_thread(TelegramNotifier(config).send_draft_images, "interactive-preview", modified_data)
         session["data"] = modified_data
         approval_token = issue_approval(session, "data")
         session["filepath"] = filepath

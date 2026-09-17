@@ -51,10 +51,9 @@ class GeekNewsHarvester:
         articles = self.fetch_weekly_articles()
         
         if not articles:
-            articles_summary = "최신 AI 모델 동향, 오픈소스 개발 도구, 소프트웨어 엔지니어링 아키텍처 및 생산성 도구 트렌드"
+            raise RuntimeError("수집한 뉴스가 없습니다. 주간 브리핑을 생성하지 않습니다.")
         else:
-            articles_summary = "
-".join([
+            articles_summary = "\n".join([
                 f"- [{a['published'][:10]}] {a['title']}: {a['content']}"
                 for a in articles[:30]
             ])
@@ -101,19 +100,7 @@ class GeekNewsHarvester:
             topic = json.loads(clean_json)
             if not topic.get("slug"):
                 topic["slug"] = f"{date_str}-geeknews-weekly-{year}-{month}w{week_num}"
+            topic["sources"] = articles
             return topic
-        except Exception as e:
-            print(f"⚠️ JSON 파싱 실패: {e}")
-            return {
-                "title": f"{year}년 {month}월 {week_num}주차 긱뉴스(GeekNews) 주간 테크 브리핑: 최신 AI & 오픈소스 트렌드",
-                "category": "개발 & 테크",
-                "target_keyword": f"긱뉴스 주간 브리핑 {year}년 {month}월",
-                "tags": ["긱뉴스", "GeekNews", "주간테크", "AI트렌드", "오픈소스", "개발자생산성"],
-                "slug": f"{date_str}-geeknews-weekly-{year}-{month}w{week_num}",
-                "key_points": [
-                    "이번 주 GeekNews를 달군 핵심 AI & 오픈소스 도구 분석",
-                    "실무 엔지니어링 및 개발 생산성 관점에서의 시사점",
-                    "새롭게 주목받은 라이브러리 및 인프라 기술 리뷰",
-                    "개발자를 위한 한 줄 요약 및 실무 적용 가이드"
-                ]
-            }
+        except Exception as exc:
+            raise RuntimeError("주간 브리핑 기획 생성 실패. 원문 확인 후 다시 작성하세요.") from exc

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Audits K-Pop Hangul Blog using Gemini 3.1 Pro High via AntigravityRunner.
+Audits K-Pop Hangul Blog using GPT high reasoning via AntigravityRunner.
 Inspects Frontend Code, Design, Pedagogical Content Structure, and Pipeline.
 """
 
@@ -31,7 +31,7 @@ def main():
     config = {"blogId": "kpop-hangul"}
     runner = AntigravityRunner(config)
 
-    print("🧐 [Audit] Gathering key files for Gemini 3.1 Pro High review...")
+    print("🧐 [Audit] Gathering key files for GPT high reasoning review...")
 
     files_to_inspect = {
         "BaseLayout.astro": "blog-frontend/src/layouts/BaseLayout.astro",
@@ -119,23 +119,23 @@ You are conducting a strict, uncompromising design, code, and pedagogical audit 
 Provide your detailed, expert audit in strict JSON format.
 """
 
-    print("🤖 [Audit] Invoking Gemini 3.1 Pro High (Thinking Effort: High)...")
+    print("🤖 [Audit] Invoking GPT high reasoning (Thinking Effort: High)...")
     result = runner.generate_text(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
-        model_name="gemini-3.1-pro-high",
+        model_name="gpt-6-astra",
         effort="high"
     )
 
     if result:
         print("\n" + "=" * 70)
-        print(" 🎯  Gemini 3.1 Pro High Audit Report Received:")
+        print(" 🎯  GPT high reasoning Audit Report Received:")
         print("=" * 70)
         print(result)
-        with open(os.path.join(SCRIPT_DIR, "gemini_pro_audit_report.json"), "w", encoding="utf-8") as f:
+        with open(os.path.join(SCRIPT_DIR, "gpt_audit_report.json"), "w", encoding="utf-8") as f:
             f.write(result)
     else:
-        print("⚠️ No output received from Gemini 3.1 Pro High.")
+        print("⚠️ No output received from GPT high reasoning.")
 
 
 if __name__ == "__main__":

@@ -10,7 +10,15 @@
     "author": "K-Pop Hangul Team"
   },
   "categories": {
-    "primary": ["Beginner (Level 1)", "Intermediate (Level 2)", "Advanced (Level 3)", "Dance & Pop", "R&B & Soul", "Hip-Hop & Rap", "Ballad & OST"],
+    "primary": [
+      "Beginner (Level 1)",
+      "Intermediate (Level 2)",
+      "Advanced (Level 3)",
+      "Dance & Pop",
+      "R&B & Soul",
+      "Hip-Hop & Rap",
+      "Ballad & OST"
+    ],
     "topLimit": 3
   },
   "seo": {
@@ -29,8 +37,9 @@
     "botUsername": "kpop_hangul_bot"
   },
   "ai": {
-    "provider": "antigravity_cli",
-    "model": "gemini-3.8-flash-high",
-    "tone": "Engaging, encouraging, educational, and structured in clear English"
+    "provider": "codex_cli",
+    "model": "gpt-6-astra",
+    "tone": "Engaging, encouraging, educational, and structured in clear English",
+    "imageProvider": "codex_image_generation"
   }
 }

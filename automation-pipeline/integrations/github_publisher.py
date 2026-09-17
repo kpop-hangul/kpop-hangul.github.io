@@ -1,49 +1,37 @@
+"""Save reviewed articles and propagate Git failures to the approval queue."""
 import os
 import re
 import time
-import yaml
-import subprocess
-import hashlib
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
+from datetime import datetime
+import subprocess
+import yaml
+from modules.gpt_images import referenced_assets, image_identity
+from modules.content_validation import validate_article, ContentValidationError, body_fingerprint
+
 
 class GitHubPublisher:
-    """
-    최종 승인된 아티클을 Astro Content Collection 마크다운 파일로 생성하고
-    고해상도 SVG 썸네일 및 본문 설명 다이어그램과 함께 Git 커밋을 수행하는 모듈
-    """
-
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config):
         self.config = config
-        self.repo_root = config.get("github", {}).get("repo_root", "../")
-        self.content_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", config.get("github", {}).get("blog_content_dir", "../blog-frontend/src/content/blog"))
-        )
+        pipeline_root = Path(__file__).resolve().parents[1]
+        self.repo_root = str((pipeline_root / config.get("github", {}).get("repo_root", "../")).resolve())
+        self.content_dir = str((pipeline_root / config.get("github", {}).get("blog_content_dir", "../blog-frontend/src/content/blog")).resolve())
         self.auto_commit = config.get("github", {}).get("auto_git_commit", True)
         self.auto_push = config.get("github", {}).get("auto_git_push", False)
 
-        os.makedirs(self.content_dir, exist_ok=True)
-
-    def generate_slug(self, title: str, category: str = "general") -> str:
-        """
-        GitHub Pages 404 방지를 위해 아티스트/곡명/영문 기반의 고유한 URL 슬러그 생성
-        """
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        ascii_words = re.findall(r"[a-zA-Z0-9]+", title.lower())
-        meaningful_words = [w for w in ascii_words if not w.isdigit() or len(w) > 2]
-
+    def generate_slug(self, title, category="general"):
+        words = re.findall(r"[a-zA-Z0-9]+", title.lower())
+        meaningful_words = [w for w in words if not w.isdigit() or len(w) > 2]
         if len(meaningful_words) >= 2:
-            keyword_slug = "-".join(meaningful_words[:4])
+            keyword = "-".join(words[:4])
         else:
+            import hashlib
             h = hashlib.md5(title.encode()).hexdigest()[:6]
-            if ascii_words:
-                keyword_slug = f"{'-'.join(ascii_words[:2])}-{h}"
+            if words:
+                keyword = f"{'-'.join(words[:2])}-{h}"
             else:
-                cat_slug = "kpop-lesson" if "kpop" in category.lower() else "song-lesson"
-                keyword_slug = f"{cat_slug}-{h}"
-
-        return f"{today_str}-{keyword_slug}"
+                keyword = f"post-{h}"
+        return f"{datetime.now():%Y-%m-%d}-{keyword}"
 
     def _path(self, slug):
         if not isinstance(slug, str) or not re.fullmatch(r"[a-zA-Z0-9가-힣_-]+", slug):
@@ -59,264 +47,114 @@ class GitHubPublisher:
             return metadata if isinstance(metadata, dict) else {}, match.group(2)
         return {}, text
 
-    def publish_article(self, article: Dict[str, Any]) -> str:
-        """
-        승인된 아티클 딕셔너리를 썸네일 및 본문 이미지와 함께 마크다운(.md) 파일로 저장하고 Git 커밋
-        """
-        title = article.get("title", "Learn Korean with K-Pop")
-        category = article.get("category", "Beginner (Level 1)")
-        slug = article.get("slug") or self.generate_slug(title, category)
-        filepath = os.path.join(self.content_dir, f"{slug}.md")
-
-        # 1. 고해상도 SVG 썸네일 생성 및 heroImage 설정
-        if "heroImage" not in article or not article["heroImage"] or article["heroImage"] == "/images/default-hero.svg":
-            try:
-                from modules.thumbnail_generator import generate_thumbnail_for_post
-                post_data = {
-                    "slug": slug,
-                    "title": title,
-                    "artist": article.get("artist", "K-Pop Artist"),
-                    "songTitle": article.get("songTitle", ""),
-                    "hangulTitle": article.get("hangulTitle", ""),
-                    "difficulty": article.get("difficulty", "Beginner"),
-                    "genre": article.get("genre", "Dance & Pop"),
-                    "chartRank": article.get("chartRank"),
-                    "chartSource": article.get("chartSource", "Melon Top 100")
-                }
-                article["heroImage"] = generate_thumbnail_for_post(post_data)
-            except Exception as e:
-                print(f"[GitHubPublisher] 썸네일 생성 예외: {e}")
-                article["heroImage"] = f"/images/thumbnails/{slug}.svg"
-
-        # 2. 본문 설명 이해용 다이어그램 2종 자동 생성 및 본문 삽입
-        try:
-            from modules.article_image_generator import generate_and_integrate_article_images
-            updated_content, imgs = generate_and_integrate_article_images(article, slug)
-            article["markdown_content"] = updated_content
-        except Exception as e:
-            print(f"[GitHubPublisher] 본문 다이어그램 생성 예외: {e}")
-
-        frontmatter_data = {
-            "title": title,
-            "description": article.get("description", ""),
-            "pubDate": article.get("pubDate") or datetime.now().strftime("%Y-%m-%d"),
-            "heroImage": article.get("heroImage", f"/images/thumbnails/{slug}.svg"),
-            "category": category,
-            "difficulty": article.get("difficulty", "Beginner"),
-            "genre": article.get("genre", "Dance & Pop"),
-            "artist": article.get("artist", "Various Artists"),
-            "songTitle": article.get("songTitle", ""),
-            "hangulTitle": article.get("hangulTitle", ""),
-            "album": article.get("album", ""),
-            "chartRank": article.get("chartRank", 1),
-            "chartSource": article.get("chartSource", "Melon Top 100"),
-            "tags": article.get("tags", []),
-            "author": article.get("author", "K-Pop Hangul Team"),
-            "readingTime": article.get("readingTime", "6 min read"),
-            "featured": article.get("featured", False),
-            "draft": False,
-        }
-
-        if "faqs" in article and article["faqs"]:
-            frontmatter_data["faqs"] = article["faqs"]
-
-        # YAML Frontmatter 직렬화
-        yaml_content = yaml.dump(
-            frontmatter_data,
-            allow_unicode=True,
-            default_flow_style=False,
-            sort_keys=False
-        )
-
-        full_content = f"---\n{yaml_content}---\n\n{article.get('markdown_content', '')}\n"
-
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(full_content)
-
-        print(f"📄 마크다운 아티클 생성 완료: {filepath}")
-
-        # Git Auto Commit
+    def _validate_for_publication(self, article, human_approved, existing_path=None):
+        if human_approved is not True:
+            raise PermissionError("구체적인 초안 본문과 출처에 대한 사람의 승인이 필요합니다.")
+        validate_article(article)
+        generation = article.get("image_generation")
+        if generation and (generation.get("status") != "complete" or generation.get("content_identity") != image_identity(article)):
+            raise ContentValidationError("본문이 바뀌었거나 이미지 생성이 미완료입니다. 이미지를 다시 생성하고 검토하세요.")
         if self.auto_commit:
-            self._git_commit_and_push(filepath, title, slug=slug)
+            referenced_assets(article, Path(self.repo_root) / "blog-frontend/public")
+        fingerprint = body_fingerprint(article["markdown_content"])
+        if not fingerprint:
+            raise ContentValidationError("본문이 비어 있습니다.")
+        # Exact duplicate-body detection is deliberately limited; it is not a semantic/factual audit.
+        for path in Path(self.content_dir).glob("*.md"):
+            if path == existing_path:
+                continue
+            _, body = self._read_post(path)
+            if body_fingerprint(body) == fingerprint:
+                raise ContentValidationError(f"기존 글과 본문이 같습니다: {path.name}")
 
-        return filepath
+    def _metadata(self, article, existing=None):
+        data = dict(existing or {})
+        data.update({"title": article["title"], "description": article["description"],
+                     "category": article["category"], "tags": article.get("tags", []),
+                     "pubDate": data.get("pubDate") or article.get("pubDate") or datetime.now().strftime("%Y-%m-%d"),
+                     "author": article.get("author") or data.get("author") or self.config.get("site", {}).get("author", "편집팀"),
+                     "readingTime": article.get("readingTime", "5 min read"),
+                     "featured": article.get("featured", data.get("featured", False)),
+                     "draft": False, "faqs": article.get("faqs", [])})
+        for key in ("heroImage", "summaryCards"):
+            if key in article:
+                data[key] = article[key]
+        for key in ("difficulty", "genre", "artist", "songTitle", "hangulTitle", "album", "chartRank", "chartSource", "youtubeId"):
+            if key in article:
+                data[key] = article[key]
+        if existing is not None:
+            data["updatedDate"] = datetime.now().strftime("%Y-%m-%d")
+            data.pop("reviewStatus", None)
+            data.pop("reviewReason", None)
+        return data
 
-    def update_existing_article(self, slug: str, article: Dict[str, Any], new_slug: str = None) -> Tuple[str, str]:
-        """
-        기존 슬러그의 마크다운(.md) 파일을 수정된 내용으로 덮어쓰거나 URL(슬러그)을 변경하고 Git 커밋
-        """
-        old_filepath = os.path.join(self.content_dir, f"{slug}.md")
-        if not os.path.exists(old_filepath):
-            matched = [f for f in os.listdir(self.content_dir) if f.startswith(slug) and f.endswith(".md")]
-            if matched:
-                old_filepath = os.path.join(self.content_dir, matched[0])
-                slug = os.path.splitext(matched[0])[0]
-            else:
-                raise FileNotFoundError(f"수정할 게시글 파일을 찾을 수 없습니다: {slug}.md")
-
-        final_slug = slug
-        if new_slug:
-            clean_new_slug = re.sub(r"[^a-zA-Z0-9\-_]", "", new_slug.strip().lower())
-            if clean_new_slug and clean_new_slug != slug:
-                final_slug = clean_new_slug
-
-        new_filepath = os.path.join(self.content_dir, f"{final_slug}.md")
-
-        title = article.get("title", "Learn Korean with K-Pop")
-        category = article.get("category", "Beginner (Level 1)")
-        pub_date = article.get("pubDate") or datetime.now().strftime("%Y-%m-%d")
-
-        # 썸네일 & 다이어그램 보완
-        if "heroImage" not in article or not article["heroImage"] or article["heroImage"] == "/images/default-hero.svg":
-            try:
-                from modules.thumbnail_generator import generate_thumbnail_for_post
-                post_data = {
-                    "slug": final_slug,
-                    "title": title,
-                    "artist": article.get("artist", "K-Pop Artist"),
-                    "songTitle": article.get("songTitle", ""),
-                    "hangulTitle": article.get("hangulTitle", ""),
-                    "difficulty": article.get("difficulty", "Beginner"),
-                    "genre": article.get("genre", "Dance & Pop"),
-                    "chartRank": article.get("chartRank"),
-                    "chartSource": article.get("chartSource", "Melon Top 100")
-                }
-                article["heroImage"] = generate_thumbnail_for_post(post_data)
-            except Exception:
-                article["heroImage"] = f"/images/thumbnails/{final_slug}.svg"
-
-        frontmatter_data = {
-            "title": title,
-            "description": article.get("description", ""),
-            "pubDate": pub_date,
-            "updatedDate": datetime.now().strftime("%Y-%m-%d"),
-            "heroImage": article.get("heroImage", f"/images/thumbnails/{final_slug}.svg"),
-            "category": category,
-            "difficulty": article.get("difficulty", "Beginner"),
-            "genre": article.get("genre", "Dance & Pop"),
-            "artist": article.get("artist", "Various Artists"),
-            "songTitle": article.get("songTitle", ""),
-            "hangulTitle": article.get("hangulTitle", ""),
-            "album": article.get("album", ""),
-            "chartRank": article.get("chartRank", 1),
-            "chartSource": article.get("chartSource", "Melon Top 100"),
-            "tags": article.get("tags", []),
-            "author": article.get("author", "K-Pop Hangul Team"),
-            "readingTime": article.get("readingTime", "6 min read"),
-            "featured": article.get("featured", False),
-            "draft": False,
-        }
-
-        if "faqs" in article and article["faqs"]:
-            frontmatter_data["faqs"] = article["faqs"]
-
-        yaml_content = yaml.dump(
-            frontmatter_data,
-            allow_unicode=True,
-            default_flow_style=False,
-            sort_keys=False
-        )
-
-        full_content = f"---\n{yaml_content}---\n\n{article.get('markdown_content', '')}\n"
-
-        with open(new_filepath, "w", encoding="utf-8") as f:
-            f.write(full_content)
-
-        is_renamed = (old_filepath != new_filepath)
-        if is_renamed and os.path.exists(old_filepath):
-            try:
-                os.remove(old_filepath)
-                print(f"🗑️ 이전 파일 삭제 완료: {old_filepath}")
-            except Exception as e:
-                print(f"⚠️ 이전 파일 삭제 실패: {e}")
-
-        print(f"📄 마크다운 아티클 수정 완료: {new_filepath} (슬러그: {final_slug})")
-
+    def publish_article(self, article, pre_commit_hook=None, *, human_approved=False):
+        self._validate_for_publication(article, human_approved)
+        slug = article.get("slug") or self.generate_slug(article["title"], article["category"])
+        path = self._path(slug)
+        if path.exists():
+            raise FileExistsError(f"이미 있는 슬러그입니다. 기존 글 수정 경로를 사용하세요: {slug}")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._save(path, article, self._metadata(article))
         if self.auto_commit:
-            paths = [new_filepath]
-            if is_renamed:
-                paths.append(old_filepath)
-            self._commit_paths(paths, f"fix(blog): update post - {title[:40]}", slug=final_slug)
+            self._git_commit_and_push(str(path), article["title"], slug=slug, article=article)
+        # A failed Git operation must not mark a keyword as published.
+        if pre_commit_hook:
+            pre_commit_hook(slug)
+        return str(path)
 
-        return new_filepath, final_slug
+    def update_existing_article(self, slug, article, new_slug=None, *, human_approved=False):
+        old_path = self._path(slug)
+        if not old_path.exists():
+            raise FileNotFoundError(f"수정할 게시글이 없습니다: {slug}")
+        self._validate_for_publication(article, human_approved, existing_path=old_path)
+        final_slug = new_slug or slug
+        new_path = self._path(final_slug)
+        if new_path != old_path and new_path.exists():
+            raise FileExistsError(f"대상 슬러그가 이미 있습니다: {final_slug}")
+        existing, _ = self._read_post(old_path)
+        self._save(new_path, article, self._metadata(article, existing))
+        if new_path != old_path:
+            old_path.unlink()
+        if self.auto_commit:
+            paths = [str(new_path)] + ([str(old_path)] if old_path != new_path else [])
+            paths.extend(referenced_assets(article, Path(self.repo_root) / "blog-frontend/public"))
+            self._commit_paths(paths, f"fix(blog): update post - {article['title'][:60]}")
+        return str(new_path), final_slug
 
     def delete_article(self, slug, *, human_approved=False):
-        """발행된 블로그 글을 삭제 (마크다운 + 썸네일 + 본문 이미지)."""
         if human_approved is not True:
             raise PermissionError("글 삭제는 사람의 명시적 승인이 필요합니다.")
         path = self._path(slug)
-        title = slug
-        if path.exists():
-            try:
-                meta, _ = self._read_post(path)
-                title = meta.get("title", slug)
-            except Exception:
-                pass
-        else:
-            candidates = list(Path(self.content_dir).glob(f"*{slug}*.md"))
-            if candidates:
-                path = candidates[0]
-                try:
-                    meta, _ = self._read_post(path)
-                    title = meta.get("title", slug)
-                except Exception:
-                    pass
-
-        # Collect all related files
-        removed_paths = [str(path)]
-        thumb_path = Path(self.repo_root) / f"blog-frontend/public/images/thumbnails/{slug}.svg"
-        removed_paths.append(str(thumb_path))
-        article_img_dir = Path(self.repo_root) / "blog-frontend/public/images/articles"
-        if article_img_dir.exists():
-            for img_file in article_img_dir.glob(f"*{slug}*"):
-                removed_paths.append(str(img_file))
-
-        # 1. Git remove tracked files safely using --ignore-unmatch
+        if not path.is_file():
+            raise FileNotFoundError(f"정확한 게시글 슬러그가 필요합니다: {slug}")
+        meta, body = self._read_post(path)
+        # Assets may be referenced by another post or queued draft. Keep them until a separate audit.
+        path.unlink()
         if self.auto_commit:
-            try:
-                subprocess.run(["git", "rm", "-f", "--ignore-unmatch", "--", *removed_paths], cwd=self.repo_root, check=True)
-            except Exception:
-                pass
+            self._commit_paths([str(path)], f"fix(blog): delete post - {meta.get('title', slug)[:60]}")
+        return meta.get("title", slug)
 
-        # 2. Delete any remaining physical files from disk
-        for p in removed_paths:
-            try:
-                Path(p).unlink(missing_ok=True)
-            except OSError:
-                pass
+    @staticmethod
+    def _save(path, article, metadata):
+        validate_article({**metadata, "markdown_content": article["markdown_content"]})
+        frontmatter = yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False)
+        path.write_text(f"---\n{frontmatter}---\n\n{article['markdown_content']}\n", encoding="utf-8")
 
-        # 3. Git commit & push if changes were staged
-        if self.auto_commit:
-            diff = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=self.repo_root)
-            if diff.returncode == 1:
-                subprocess.run(["git", "commit", "-m", f"fix(blog): delete post - {title[:60]}"], cwd=self.repo_root, check=True)
-            if self.auto_push:
-                subprocess.run(["git", "push", "origin", "HEAD:main"], cwd=self.repo_root, check=True)
-        return title
+    def _git_commit_and_push(self, filepath, title, slug=None, article=None):
+        if article is None:
+            meta, body = self._read_post(Path(filepath))
+            article = {**meta, "markdown_content": body}
+        paths = [filepath] + referenced_assets(article, Path(self.repo_root) / "blog-frontend/public")
+        self._commit_paths(paths, f"feat(blog): publish new post - {title[:60]}")
 
-    def _git_commit_and_push(self, filepath: str, title: str, slug: Optional[str] = None):
-        """Git 커밋 실행 (썸네일 및 본문 이미지 자동 포함)"""
-        self._commit_paths([filepath], f"feat(blog): publish new post - {title[:40]}", slug=slug)
-
-    def _commit_paths(self, paths: list, message: str, slug: Optional[str] = None):
-        try:
-            full_paths = list(paths)
-            if slug:
-                thumb_path = Path(self.repo_root) / f"blog-frontend/public/images/thumbnails/{slug}.svg"
-                if thumb_path.exists():
-                    full_paths.append(str(thumb_path))
-                article_img_dir = Path(self.repo_root) / "blog-frontend/public/images/articles"
-                if article_img_dir.exists():
-                    for img_file in article_img_dir.glob(f"*{slug}*"):
-                        full_paths.append(str(img_file))
-
-            for p in full_paths:
-                subprocess.run(["git", "add", p], cwd=self.repo_root, check=False)
-
-            subprocess.run(["git", "commit", "-m", message], cwd=self.repo_root, check=False)
-
-            if self.auto_push:
-                print("🚀 GitHub 원격 저장소로 Push 실행 중...")
-                subprocess.run(["git", "push", "origin", "main"], cwd=self.repo_root, check=False)
-        except Exception as e:
-            print(f"[GitHubPublisher] Git 작업 중 알림: {e}")
+    def _commit_paths(self, paths, message):
+        # No broad `git add -A`, ignored errors, or automatic history rewrite.
+        subprocess.run(["git", "add", "--", *paths], cwd=self.repo_root, check=True)
+        diff = subprocess.run(["git", "diff", "--cached", "--quiet", "--", *paths], cwd=self.repo_root)
+        if diff.returncode == 1:
+            subprocess.run(["git", "commit", "--only", "-m", message, "--", *paths], cwd=self.repo_root, check=True)
+        elif diff.returncode != 0:
+            raise RuntimeError("Git 변경 확인 실패")
+        if self.auto_push:
+            subprocess.run(["git", "push", "origin", "HEAD:main"], cwd=self.repo_root, check=True)

@@ -127,30 +127,25 @@ def is_kpop_candidate(artist: str, title: str) -> bool:
 
 
 
-def load_published_songs() -> List[Dict[str, Any]]:
-    """Loads history of published songs to prevent duplicate articles."""
-    if os.path.exists(PUBLISHED_FILE):
-        try:
-            with open(PUBLISHED_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
+def load_published_songs():
+    if not os.path.exists(PUBLISHED_FILE):
+        return []
+    with open(PUBLISHED_FILE, encoding="utf-8") as handle:
+        data = json.load(handle)
+    if not isinstance(data, list):
+        raise ValueError("Invalid published song history")
+    return data
 
 
-def save_published_song(song_info: Dict[str, Any]):
-    """Records a newly published song to the database."""
-    published = load_published_songs()
-    # Check if already exists
-    sig = f"{song_info.get('artist', '').lower()}:{song_info.get('songTitle', '').lower()}"
-    for item in published:
-        item_sig = f"{item.get('artist', '').lower()}:{item.get('songTitle', '').lower()}"
-        if item_sig == sig:
+def save_published_song(song_info):
+    from modules.atomic_storage import file_lock, atomic_json
+    with file_lock(PUBLISHED_FILE):
+        published = load_published_songs()
+        sig = f"{song_info.get('artist', '').lower()}:{song_info.get('songTitle', '').lower()}"
+        if any(f"{x.get('artist', '').lower()}:{x.get('songTitle', '').lower()}" == sig for x in published):
             return
-
-    published.append(song_info)
-    with open(PUBLISHED_FILE, "w", encoding="utf-8") as f:
-        json.dump(published, f, ensure_ascii=False, indent=2)
+        published.append(song_info)
+        atomic_json(PUBLISHED_FILE, published)
 
 
 def is_song_published(artist: str, title: str, published_list: List[Dict[str, Any]]) -> bool:

@@ -5,8 +5,8 @@ Daily K-Pop Korean Learning Pipeline:
 1. Fetches real-time Melon Top 100 & Spotify Daily Charts
 2. Selects fresh, unpublished top songs
 3. Writes comprehensive English educational lessons (Hangul lyrics, Romanization, vocabulary, grammar)
-4. Performs independent pedagogical editorial review (Gemini)
-5. Generates SVG thumbnail & contextual article diagrams
+4. Performs independent pedagogical editorial review (GPT high reasoning)
+5. Generates a GPT raster thumbnail and two contextual body images
 6. Queues into DraftApprovalQueue (HITL Review Gate - wikidocs.net/366626)
 7. Sends Telegram smart review report with approval button
 8. Publishes ONLY when human-approved via Telegram button or /approve command
@@ -28,7 +28,9 @@ sys.path.insert(0, SCRIPT_DIR)
 from modules.kpop_chart_crawler import get_daily_candidate_songs, save_published_song
 from agents.content_writer import ContentWriter
 from agents.editorial_reviewer import EditorialReviewAgent
-from modules.draft_queue import DraftApprovalQueue
+from modules.draft_queue import DraftApprovalQueue, serialize_publication
+from modules.gpt_images import prepare_article_images
+from modules.content_validation import validate_article
 from integrations.github_publisher import GitHubPublisher
 from integrations.telegram_bot import TelegramNotifier
 
@@ -36,28 +38,9 @@ FRONTEND_BLOG_DIR = os.path.join(ROOT_DIR, "blog-frontend", "src", "content", "b
 CONFIG_FILE = os.path.join(ROOT_DIR, "blog.config.json")
 
 
-def load_config() -> Dict[str, Any]:
-    """Loads configuration by combining YAML config and blog.config.json."""
-    cfg = {"blogId": "kpop-hangul"}
-    yaml_path = os.path.join(SCRIPT_DIR, "config", "config.yaml")
-    if os.path.exists(yaml_path):
-        try:
-            import yaml
-            with open(yaml_path, "r", encoding="utf-8") as f:
-                yaml_cfg = yaml.safe_load(f)
-                if isinstance(yaml_cfg, dict):
-                    cfg.update(yaml_cfg)
-        except Exception:
-            pass
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                json_cfg = json.load(f)
-                if isinstance(json_cfg, dict):
-                    cfg.update(json_cfg)
-        except Exception:
-            pass
-    return cfg
+def load_config():
+    from modules.configuration import load_configuration
+    return load_configuration(SCRIPT_DIR)
 
 
 def generate_slug(artist: str, title: str, date_str: str) -> str:
@@ -124,78 +107,46 @@ def save_markdown_post(article: Dict[str, Any], slug: str) -> str:
     return post_file
 
 
-def publish_queued_draft(config: Dict[str, Any], draft_id: str, *, human_approved: bool = False) -> tuple:
-    """
-    검토 대기 큐(DraftApprovalQueue)의 특정 K-Pop 초안을 승인하여
-    Astro 블로그 저장소에 마크다운 파일로 저장하고 Git 커밋/배포 및 텔레그램 알림 수행.
-    (wikidocs.net/366626 HITL 필수 검수 게이트 원칙 준수)
-    """
+@serialize_publication
+def publish_queued_draft(config, draft_id, *, human_approved=False):
     queue = DraftApprovalQueue(ROOT_DIR)
-    draft_item = queue.get_draft(draft_id)
-    if not draft_item:
-        return False, f"초안 ID '{draft_id}'를 찾을 수 없습니다."
-
-    if draft_item.get("status") == "published":
-        existing_url = draft_item.get("published_url", "")
-        return True, f"이미 발행 완료된 글입니다: {existing_url}"
-
-    if not human_approved:
-        return False, "초안 본문과 감수 내용을 검토한 후 사람이 승인해야 발행할 수 있습니다."
-
-    article = draft_item.get("article", {})
-    song = draft_item.get("topic", {})
-    review = draft_item.get("review", {})
-
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    slug = draft_item.get("existing_slug") or article.get("slug") or generate_slug(
-        article.get("artist", song.get("artist", "kpop")),
-        article.get("songTitle", song.get("title", "song")),
-        today_str
-    )
-    article["slug"] = slug
-    article["draft"] = False
-
-    # 1. Astro 마크다운 컨텐츠 저장
-    post_path = save_markdown_post(article, slug)
-    print(f"📄 Saved Astro Content: {os.path.relpath(post_path, ROOT_DIR)}")
-
-    # 2. 발행 완료 곡 데이터베이스 등록
-    save_published_song({
-        "artist": article.get("artist", song.get("artist")),
-        "songTitle": article.get("songTitle", song.get("title")),
-        "title": article.get("title"),
-        "slug": slug,
-        "chartSource": article.get("chartSource", song.get("chartSource", "Melon Top 100")),
-        "chartRank": article.get("chartRank", song.get("rank", 1)),
-        "difficulty": article.get("difficulty", song.get("difficulty", "Beginner")),
-        "genre": article.get("genre", song.get("genre", "Dance & Pop")),
-        "pubDate": today_str,
-        "score": review.get("total_score", 90),
-        "heroImage": article.get("heroImage")
-    })
-
-    # 3. Git 커밋 & Push (GitHubPublisher 활용)
-    site_url = config.get("site", {}).get("url", "https://kpop-hangul.github.io").rstrip("/")
-    publisher = GitHubPublisher(config)
-    full_post_url = f"{site_url}/blog/{slug}/"
-
+    draft = queue.get_draft(draft_id)
+    if not draft:
+        return False, "초안을 찾을 수 없습니다."
+    if draft.get("status") == "published":
+        return True, draft.get("published_url", "")
+    if human_approved is not True or draft.get("status") not in ("pending_review", "approved"):
+        return False, "검토 가능한 초안에 대한 사람의 승인이 필요합니다."
+    article = dict(draft.get("article", {}))
+    song = draft.get("topic", {})
+    article["slug"] = article.get("slug") or generate_slug(article.get("artist", "kpop"), article.get("songTitle", "song"), datetime.now().strftime("%Y-%m-%d"))
     try:
-        publisher._git_commit_and_push(post_path, article.get("title", slug), slug=slug)
-    except Exception as e:
-        print(f"⚠️ Git 작업 알림: {e}")
-
-    # 4. 검토 큐 상태 갱신 (published)
-    queue.mark_published(draft_id, slug, full_post_url)
-
-    # 5. 텔레그램 배포 완료 알림
-    telegram = TelegramNotifier(config)
-    inspection = {
-        "score": review.get("total_score", 90),
-        "char_count": len(article.get("markdown_content", ""))
-    }
-    telegram.send_article_published(article, inspection, full_post_url)
-
-    return True, full_post_url
+        validate_article(article)
+        if not queue.mark_approved(draft["draft_id"]):
+            return False, "승인 저장 실패"
+        publisher = GitHubPublisher(config)
+        slug = article["slug"]
+        # Legacy K-Pop queues used existing_slug for brand-new drafts too.
+        existing_slug = draft.get("existing_slug")
+        if existing_slug and publisher._path(existing_slug).is_file():
+            _, slug = publisher.update_existing_article(existing_slug, article, human_approved=True)
+        elif publisher._path(slug).is_file() and draft.get("status") == "approved":
+            # Retry a previously failed push only when the saved content is the same revision.
+            meta, body = publisher._read_post(publisher._path(slug))
+            from modules.content_validation import body_fingerprint
+            if meta.get("title") != article["title"] or body_fingerprint(body) != body_fingerprint(article["markdown_content"]):
+                raise ValueError("저장된 글이 승인된 초안과 다릅니다. 기존 글 수정으로 검토하세요.")
+            publisher._git_commit_and_push(str(publisher._path(slug)), article["title"], slug=slug, article=article)
+        else:
+            publisher.publish_article(article, human_approved=True)
+        url = config.get("site", {}).get("url", "https://kpop-hangul.github.io").rstrip("/") + f"/blog/{slug}/"
+        save_published_song({**song, **article, "slug": slug, "pubDate": datetime.now().strftime("%Y-%m-%d")})
+        if not queue.mark_published(draft["draft_id"], slug, url):
+            return False, "Git 작업 완료 후 큐 저장 실패. 상태 확인이 필요합니다."
+    except Exception as exc:
+        return False, f"발행 실패: {type(exc).__name__}: {exc}"
+    TelegramNotifier(config).send_article_published(article, {"score": draft.get("review", {}).get("total_score", 0), "char_count": len(article["markdown_content"])}, url)
+    return True, url
 
 
 def run_daily_pipeline(count: int = 1, specific_song: Optional[Dict[str, Any]] = None, dry_run: bool = False, auto_approve: bool = False):
@@ -250,33 +201,7 @@ def run_daily_pipeline(count: int = 1, specific_song: Optional[Dict[str, Any]] =
             results.append({"slug": slug, "title": article.get("title"), "score": score, "status": "dry_run"})
             continue
 
-        # Generate SVG thumbnail & contextual article illustrations
-        try:
-            from modules.thumbnail_generator import generate_thumbnail_for_post
-            from modules.article_image_generator import generate_and_integrate_article_images
-
-            post_data = {
-                "slug": slug,
-                "title": article.get("title", ""),
-                "artist": article.get("artist", song.get("artist")),
-                "songTitle": article.get("songTitle", song.get("title")),
-                "hangulTitle": article.get("hangulTitle", ""),
-                "difficulty": article.get("difficulty", "Beginner"),
-                "genre": article.get("genre", "Dance & Pop"),
-                "chartRank": article.get("chartRank", song.get("rank")),
-                "chartSource": article.get("chartSource", song.get("chartSource")),
-            }
-            thumb_url = generate_thumbnail_for_post(post_data)
-            article["heroImage"] = thumb_url
-            print(f"  🖼️ Generated SVG Thumbnail: {thumb_url}")
-
-            updated_content, imgs = generate_and_integrate_article_images(article, slug)
-            article["markdown_content"] = updated_content
-            article["article_images"] = imgs
-            print(f"  📸 Injected {len(imgs)} contextual educational diagrams into lesson!")
-        except Exception as e:
-            print(f"  ⚠️ Thumbnail / Illustration generation warning: {e}")
-            article["heroImage"] = f"/images/thumbnails/{slug}.svg"
+        article = prepare_article_images(article, config)
 
         # 4. Save to DraftApprovalQueue for Human-in-the-Loop review
         draft_id = queue.add_draft(article, review, topic=song)
