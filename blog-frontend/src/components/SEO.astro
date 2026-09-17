@@ -31,6 +31,7 @@ const {
   gaId = siteConfig.seo.gaId || import.meta.env.PUBLIC_GA_ID || '',
   googleVerification = siteConfig.seo.googleVerification || import.meta.env.PUBLIC_GOOGLE_VERIFICATION || '',
   naverVerification = siteConfig.seo.naverVerification || import.meta.env.PUBLIC_NAVER_VERIFICATION || '',
+  goatcounterCode = siteConfig.seo.goatcounterCode || import.meta.env.PUBLIC_GOATCOUNTER_CODE || 'kpophangul',
 } = Astro.props;
 
 const siteName = siteConfig.site.shortName || 'K-Pop Hangul';
@@ -162,4 +163,9 @@ const faqSchema = (faqs && faqs.length > 0) ? {
       gtag('config', gaId);
     </script>
   </>
+)}
+
+<!-- GoatCounter Lightweight Realtime Privacy Analytics -->
+{goatcounterCode && (
+  <script data-goatcounter={`https://${goatcounterCode}.goatcounter.com/count`} async src="//gc.zgo.at/count.js"></script>
 )}

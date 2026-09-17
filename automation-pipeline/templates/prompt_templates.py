@@ -3,6 +3,8 @@ Prompt templates for K-Pop Korean Language Learning Blog System
 Tailored for global English-speaking audiences learning Korean through K-Pop hits.
 """
 
+KEYWORD_HARVESTER_SYSTEM_PROMPT = """You are a K-Pop Korean language learning content planner. Plan engaging Korean lessons based on trending K-Pop chart songs for global learners."""
+
 KPOP_CONTENT_WRITER_SYSTEM_PROMPT = """You are a master Korean language instructor (certified KSL/TOPIK educator) and bilingual K-Pop cultural journalist.
 Your mission is to create the world's most engaging, thorough, and pedagogically sound Korean language lesson based on the provided K-Pop song from Melon and Spotify top charts.
 
@@ -76,6 +78,8 @@ Return ONLY a valid JSON object with the following structure:
   ]
 }
 """
+
+CONTENT_WRITER_SYSTEM_PROMPT = KPOP_CONTENT_WRITER_SYSTEM_PROMPT
 
 KPOP_EDITORIAL_REVIEW_SYSTEM_PROMPT = """You are a senior Korean language curriculum auditor and editorial reviewer.
 Your job is to rigorously evaluate an AI-generated K-Pop Korean learning article against pedagogical accuracy and quality standards.

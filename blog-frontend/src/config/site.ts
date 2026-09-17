@@ -19,6 +19,7 @@ export interface SiteConfig {
     naverVerification: string;
     googleVerification: string;
     gaId: string;
+    goatcounterCode?: string;
   };
   monetization: {
     adsenseClientId: string;

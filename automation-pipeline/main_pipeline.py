@@ -163,7 +163,7 @@ def run_geeknews_weekly_pipeline(config: dict):
 
 def main():
     parser = argparse.ArgumentParser(description="K-Pop Hangul 자동화 블로그 파이프라인 (HITL Review Gate)")
-    parser.add_argument("--mode", choices=["auto", "dryrun", "geeknews_weekly", "trend", "interactive", "report", "morning_report", "evening_report", "revenue_report", "health", "test_telegram"], default="auto")
+    parser.add_argument("--mode", choices=["auto", "dryrun", "geeknews_weekly", "trend", "interactive", "report", "morning_report", "evening_report", "revenue_report", "traffic_report", "health", "test_telegram"], default="auto")
     parser.add_argument("--approve", action="store_true", help="호환 옵션: 자동 발행하지 않고 검토 큐에 저장")
     parser.add_argument("--publish-draft", type=str, default=None, help="대기 큐의 특정 draft_id 승인 및 발행")
     parser.add_argument("--list-queue", action="store_true", help="대기 큐 목록 조회")
@@ -221,17 +221,18 @@ def main():
         telegram.send_daily_site_status("morning", stats)
 
     elif args.mode == "evening_report":
-        # 매일 저녁 19:00 KST
+        # 매일 저녁 19:00 KST (오늘 클릭/뷰 트래픽 카운트 보고)
         stats = tracker.get_site_statistics()
-        revenue = tracker.get_adsense_statistics()
-        print("🌆 [일일 저녁 사이트 현황 및 수익 보고 (19:00)] 전송 중...")
+        traffic = tracker.get_click_view_statistics()
+        print("🌆 [일일 저녁 사이트 현황 및 오늘 클릭/뷰 트래픽 보고 (19:00)] 전송 중...")
         telegram.send_daily_site_status("evening", stats)
-        telegram.send_adsense_daily_report(revenue)
+        telegram.send_click_view_daily_report(traffic)
 
-    elif args.mode == "revenue_report":
-        revenue = tracker.get_adsense_statistics()
-        print("💰 [광고 수익 현황 보고] 전송 중...")
-        telegram.send_adsense_daily_report(revenue)
+    elif args.mode in ["revenue_report", "traffic_report"]:
+        # 오늘 클릭 및 페이지뷰(PV/UV) 카운트 보고
+        traffic = tracker.get_click_view_statistics()
+        print("📈 [오늘 클릭/뷰 트래픽 현황 보고] 전송 중...")
+        telegram.send_click_view_daily_report(traffic)
 
     elif args.mode == "health":
         health = tracker.get_system_health()
@@ -240,9 +241,9 @@ def main():
 
     elif args.mode == "report":
         stats = tracker.get_site_statistics()
-        revenue = tracker.get_adsense_statistics()
+        traffic = tracker.get_click_view_statistics()
         telegram.send_daily_site_status("evening", stats)
-        telegram.send_adsense_daily_report(revenue)
+        telegram.send_click_view_daily_report(traffic)
 
     elif args.mode == "test_telegram":
         print("📲 [텔레그램 5종 알림 테스트 발송 시작]...")

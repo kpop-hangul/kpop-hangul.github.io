@@ -78,5 +78,85 @@
         "detail": "측정 ID: G-WE6WVHJ03S"
       }
     }
+  },
+  "2026-09-17": {
+    "date": "2026-09-17",
+    "is_measured": true,
+    "today_views": 0,
+    "today_uv": 0,
+    "today_clicks": 0,
+    "ctr": 0.0,
+    "cumulative_views": 51,
+    "total_uniques_14d": 2,
+    "latest_active_date": "2026-09-15",
+    "latest_active_views": 51,
+    "total_posts": 23,
+    "today_posts": 0,
+    "category_views": {
+      "Intermediate (Level 2)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 78.3
+      },
+      "Beginner (Level 1)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 13.0
+      },
+      "Advanced (Level 3)": {
+        "views": 0,
+        "clicks": 0,
+        "ratio": 8.7
+      }
+    },
+    "top_posts": [
+      {
+        "title": "Learn Korean with SOYEON (소연) - '퇴사할게여 (Quit My Job)': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-16-soyeon-퇴사할게여",
+        "category": "Intermediate (Level 2)",
+        "views": 0,
+        "clicks": 0
+      },
+      {
+        "title": "Learn Korean with 소연 (SOYEON) - '퇴사할게여 (Narr. 기안84)': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-16-소연-퇴사할게여",
+        "category": "Intermediate (Level 2)",
+        "views": 0,
+        "clicks": 0
+      },
+      {
+        "title": "Learn Korean with RESCENE - 'Deja Vu': Lyrics, Vocabulary & Grammar Breakdown",
+        "slug": "2026-09-14-rescene-deja-vu",
+        "category": "Beginner (Level 1)",
+        "views": 0,
+        "clicks": 0
+      }
+    ],
+    "growth_vs_yesterday": 0.0,
+    "sources": {
+      "github": {
+        "name": "GitHub Pages Traffic API",
+        "status": "🟢 실측 연동됨",
+        "detail": "14일간 누적 51회 방문 (2명 순방문)",
+        "today_views": 0,
+        "today_uniques": 0,
+        "total_views_14d": 51,
+        "total_uniques_14d": 2,
+        "latest_active_date": "2026-09-15",
+        "latest_active_views": 51
+      },
+      "goatcounter": {
+        "name": "GoatCounter (초경량 실시간)",
+        "status": "🟢 프론트엔드 연동 활성",
+        "dashboard": "https://kpophangul.goatcounter.com",
+        "tag": "gc.zgo.at/count.js (kpophangul)"
+      },
+      "ga4": {
+        "name": "Google Analytics 4",
+        "status": "⏳ 측정 ID(G-...) 등록 대기",
+        "ga_id": null,
+        "detail": "blog.config.json의 gaId 또는 PUBLIC_GA_ID 등록 시 즉시 실측"
+      }
+    }
   }
 }

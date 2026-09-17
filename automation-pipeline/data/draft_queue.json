@@ -538,7 +538,7 @@
     "category": "Intermediate (Level 2)",
     "existing_slug": "2026-09-16-소연-퇴사할게여",
     "created_at": "2026-09-16 12:12:16",
-    "status": "pending_review",
+    "status": "published",
     "topic": {
       "rank": 4,
       "chartSource": "Melon Top 100",
@@ -632,9 +632,9 @@
     },
     "human_edit_points": [],
     "change_history": [],
-    "published_at": null,
-    "post_slug": null,
-    "published_url": null,
+    "published_at": "2026-09-16 21:29:03",
+    "post_slug": "2026-09-16-소연-퇴사할게여",
+    "published_url": "https://kpop-hangul.github.io/blog/2026-09-16-소연-퇴사할게여/",
     "rejected_at": null,
     "rejection_reason": null
   },
@@ -745,6 +745,110 @@
     "published_at": null,
     "post_slug": null,
     "published_url": null,
+    "rejected_at": null,
+    "rejection_reason": null
+  },
+  {
+    "draft_id": "draft_20260916_213048_LearnKorea",
+    "title": "Learn Korean with SOYEON (소연) - '퇴사할게여 (Quit My Job)': Lyrics, Vocabulary & Grammar Breakdown",
+    "category": "Intermediate (Level 2)",
+    "existing_slug": "2026-09-16-soyeon-퇴사할게여",
+    "created_at": "2026-09-16 21:30:48",
+    "status": "published",
+    "topic": {
+      "rank": 3,
+      "chartSource": "Melon Top 100",
+      "artist": "소연 (SOYEON)",
+      "title": "퇴사할게여 (Narr. 기안84)",
+      "album": "끝내주는 인생",
+      "genre": "Dance & Pop",
+      "difficulty": "Intermediate"
+    },
+    "article": {
+      "title": "Learn Korean with SOYEON (소연) - '퇴사할게여 (Quit My Job)': Lyrics, Vocabulary & Grammar Breakdown",
+      "description": "Master conversational Korean with SOYEON's hit '퇴사할게여'. Learn -(으)ㄹ게요, -거든요, workplace vocabulary, and real-life pronunciation secrets!",
+      "category": "Intermediate (Level 2)",
+      "difficulty": "Intermediate",
+      "genre": "Dance & Pop",
+      "artist": "SOYEON (소연)",
+      "songTitle": "퇴사할게여 (Narr. 기안84)",
+      "hangulTitle": "퇴사할게여 (Narr. 기안84)",
+      "album": "끝내주는 인생",
+      "chartRank": 3,
+      "chartSource": "Melon Top 100",
+      "tags": [
+        "SOYEON",
+        "퇴사할게여",
+        "Learn Korean",
+        "K-Pop Lyrics",
+        "Hangul",
+        "Grammar",
+        "Melon Top 100"
+      ],
+      "readingTime": "7 min read",
+      "markdown_content": "## 1. Song Overview & Korean Learning Guide\n\nClimbing straight to **#3 on the Melon Top 100**, **'퇴사할게여 (Narr. 기안84)'** by **SOYEON (소연)** from her album *끝내주는 인생* has become an anthem for South Korea's modern workforce and youth culture. Featuring an eccentric and hilariously grounded narration by webtoon artist and TV personality **Kian84 (기안84)**, the track tackles the universal dream of corporate escape: *toesa* (퇴사 - resigning from one's job).\n\n### Why This Song Is Ideal for Korean Learners\nUnlike songs dense with abstract poetry or rapid-fire wordplay, '퇴사할게여' is a masterclass in **authentic spoken Korean (구어체)**. It showcases the exact speech styles, polite sentence endings, and casual nuances South Koreans use when venting their feelings, explaining reasons, and making big life decisions. \n\n* **Recommended Proficiency Level**: **Intermediate (Level 2)**\n* **Standardized Benchmark**: **TOPIK II Level 3 / CEFR B1**\n* **Prerequisites**: Familiarity with basic verb conjugation and polite informal endings (`-아/어요`).\n\n---\n\n## 2. Key Lyrics Breakdown (Hook & Chorus)\n\nHere are the most iconic lines from the hook and chorus, broken down line by line.\n\n### Line 1\n* **Hangul**: 퇴사할게요 아쉬울 거도 없거든요\n* **Romanization**: Toesahalgeyo aswiul geodo eopgeodeunnyo\n* **English Translation**: I'm going to quit my job; after all, I have no regrets or lingering attachments.\n* **Literal Breakdown**: 퇴사하- (*toesa-ha-*, resign/quit company) + -(으)ㄹ게요 (*-(eu)lgeyo*, I will / intention) + 아쉽- (*aswip-*, feel regretful/reluctant to part) + -(으)ㄹ (*-(eu)l*, future noun modifier) + 거 (*geo*, thing/matter) + -도 (*-do*, also/even) + 없- (*eopt-*, not exist) + -거든요 (*-geodeunnyo*, because/you know).\n\n### Line 2\n* **Hangul**: 원래 이렇게 열심히 살 생각 없었거든요\n* **Romanization**: Wonrae ireoke yeolsimhi sal saenggak eopseotgeodeunnyo\n* **English Translation**: I never actually intended to live this intensely in the first place, you see.\n* **Literal Breakdown**: 원래 (*wonrae*, originally/in the first place) + 이렇게 (*ireoke*, like this) + 열심히 (*yeolsimhi*, diligently/hard) + 살 (*sal*, to live [noun modifier]) + 생각 (*saenggak*, thought/plan) + 없- (*eopt-*, not exist) + -었- (*-eot-*, past tense marker) + -거든요 (*-geodeunnyo*, as you know/because).\n\n### Line 3\n* **Hangul**: 쿨하게 짐을 싸고 뒤돌아보지 않고 모두 안녕히 계세요\n* **Romanization**: Kulhage jimeul ssago dwidoraboji anko modu annyeonghi gyeseyo\n* **English Translation**: Coolly packing my bags without looking back, goodbye to everyone!\n* **Literal Breakdown**: 쿨하게 (*kulhage*, coolly) + 짐 (*jim*, baggage/belongings) + -을 (*-eul*, object particle) + 싸- (*ssa-*, pack) + -고 (*-go*, and) + 뒤돌아보- (*dwidorabo-*, look back) + -지 않- (*-ji an-*, negative auxiliary) + -고 (*-go*, and) + 모두 (*modu*, everyone) + 안녕히 계세요 (*annyeonghi gyeseyo*, goodbye/stay in peace).\n\n### Line 4\n* **Hangul**: 그래 이팔청춘 후회하면 어때요\n* **Romanization**: Geurae ipalcheongchun huhoehamyeon eottaeyo\n* **English Translation**: Yeah, we're in the bloom of youth—so what if we regret it?\n* **Literal Breakdown**: 그래 (*geurae*, yeah/alright) + 이팔청춘 (*ipalcheongchun*, sweet bloom of youth) + 후회하- (*huhoe-ha-*, regret) + -(으)면 (*-(eu)myeon*, if/when) + 어때요 (*eottaeyo*, how is it? / so what?).\n\n### Line 5\n* **Hangul**: 당장 저 문밖으로 떠나요\n* **Romanization**: Dangjang jeo munbakkeuro tteonayo\n* **English Translation**: Let's leave right through that door this instant!\n* **Literal Breakdown**: 당장 (*dangjang*, immediately/right now) + 저 (*jeo*, that over there) + 문 (*mun*, door) + 밖 (*bak*, outside) + -으로 (*-euro*, direction particle) + 떠나- (*tteona-*, leave/depart) + -아요 (*-ayo*, polite suggestion/imperative).\n\n### Line 6\n* **Hangul**: 결국 우린 모두 할머니가 될 거고 뒤돌아보면 오늘 하루는 It was a romantic day\n* **Romanization**: Gyeolguk urin modu halmeoniga doel geogo dwidorabomyeon oneul haruneun It was a romantic day\n* **English Translation**: In the end, we're all going to become grandmothers anyway, and looking back, this day will be a romantic day.\n* **Literal Breakdown**: 결국 (*gyeolguk*, in the end/eventually) + 우리 (*uri*, we) + -는 (*-neun*, topic particle [contracted to 우린]) + 모두 (*modu*, all) + 할머니 (*halmeoni*, grandmother) + -가 (*-ga*, subject particle) + 되- (*doe-*, become) + -(으)ㄹ 거고 (*-(eu)l geogo*, will be and) + 뒤돌아보- (*dwidorabo-*, look back) + -(으)면 (*-(eu)myeon*, when/if) + 오늘 (*oneul*, today) + 하루 (*haru*, one full day) + -는 (*-neun*, topic particle) + It was a romantic day.\n\n---\n\n<!-- article-illustration:kpop-2026-09-16-soyeon-퇴사할게여-01 -->\n<figure class=\"article-illustration my-8 block\">\n  <img src=\"/images/articles/kpop-2026-09-16-soyeon-퇴사할게여-01.webp\" alt=\"SOYEON (소연) - 퇴사할게여 (Narr. 기안84) Lyrics and Phonetic Sound Change Diagram\" width=\"1536\" height=\"1024\" loading=\"lazy\" decoding=\"async\" class=\"w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover\" />\n  <figcaption class=\"mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed\">Figure 1: SOYEON (소연) - &#x27;퇴사할게여 (Narr. 기안84)&#x27; Syllable Block Structure, Phonetic Linking (연음), and Chorus Flow Guide</figcaption>\n</figure>\n<!-- /article-illustration:kpop-2026-09-16-soyeon-퇴사할게여-01 -->\n\n## 3. Core Vocabulary Table\n\n| Hangul | Phonetic [발음] | Romanization | Part of Speech | English Meaning | Lyric Example |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| **퇴사(하다)** | `[퇴사하다]` / `[퉤사하다]` | toesa(hada) | Noun / Verb | Resignation; quitting one's company | 퇴사할게요 아쉬울 거도 없거든요 |\n| **아쉽다** | `[아쉽따]` | aswipda | Adjective | To feel regretful, reluctant to part, or unsatisfied | 아쉬울 거도 없거든요 |\n| **원래** | `[원래]` | wonrae | Adverb | Originally; in the first place; by nature | 원래 이렇게 열심히 살 생각 없었거든요 |\n| **참다** | `[참따]` | chamda | Verb | To endure, bear, hold back, or suppress | 수백 번을 참았거든요 |\n| **짐(을) 싸다** | `[지믈 싸다]` | jim(-eul) ssada | Verb Phrase | To pack bags / belongings | 쿨하게 짐을 싸고 뒤돌아보지 않고 |\n| **이팔청춘** | `[이팔청춘]` | ipalcheongchun | Noun (Idiom) | The prime bloom of youth (ages 16–25) | 그래 이팔청춘 후회하면 어때요 |\n| **당장** | `[당장]` | dangjang | Adverb | Immediately; right away; on the spot | 당장 저 문밖으로 떠나요 |\n| **철없다** | `[처럽따]` | cheoreopda | Adjective | Immature; childish; indiscreet | 내 이런 철없는 말이 조금 당황스러워도 |\n\n---\n\n## 4. Essential Grammar Deep Dive\n\n### Pattern 1: Verb Stem + -(으)ㄹ게요 (\"I will... / Let me...\")\n* **Grammar Formula**:\n  * Vowel ending or `ㄹ` batchim: **`Verb Stem + -ㄹ게요`** (e.g., 가다 $\\rightarrow$ 갈게요, 퇴사하다 $\\rightarrow$ 퇴사할게요)\n  * Consonant ending (except `ㄹ`): **`Verb Stem + -을게요`** (e.g., 먹다 $\\rightarrow$ 먹을게요, 잡다 $\\rightarrow$ 잡을게요)\n\n#### How It Works in Korean Conversation\n`-(으)ㄹ게요` expresses the speaker's voluntary intention or decision made **in consideration of or directly to the listener**. Unlike the general future prediction `-(으)ㄹ 거예요` (\"I am going to...\") or the rigid formal declaration `-겠어요`, `-(으)ㄹ게요` creates a polite conversational promise or notice. It can only be used with **first-person subjects**.\n\n#### How It Works in the Lyrics\n> **\"퇴사할게요 아쉬울 거도 없거든요\"**\n> *(I will resign; I have no regrets, you see.)*\n\nSOYEON addresses her employer and the world directly, declaring her final workplace decision with clear, conversational politeness.\n\n* **Pedagogical Note on Title Spelling (`퇴사할게여`)**: In standard grammar, the ending is `-요` (`퇴사할게요`). In everyday Korean texting and mobile chat (KakaoTalk), replacing `-요` with `-여` or `-용` adds a cute (*aegyo*), lighthearted nuance. SOYEON deliberately chose `퇴사할게여` in the title to inject playful irony into a serious corporate life event!\n\n#### 2 Real-Life Spoken Examples\n1. **Hangul**: 제가 회의 끝나고 바로 전화할게요.\n   * **Romanization**: Jega hoeui kkeutnago baro jeonhwahalgeyo.\n   * **English**: I will call you right after the meeting finishes.\n2. **Hangul**: 오늘 저녁은 제가 맛있는 거 살게요!\n   * **Romanization**: Oneul jeonyeogeun jega masinneun geo salgeyo!\n   * **English**: Dinner is on me tonight; I'll buy something delicious!\n\n---\n\n### Pattern 2: Verb/Adjective Stem + -거든요 (\"You see, it's because... / ...you know\")\n* **Grammar Formula**:\n  * Present: **`Stem + -거든요`** (e.g., 없다 $\\rightarrow$ 없거든요, 많다 $\\rightarrow$ 많거든요)\n  * Past: **`Past Stem + -었/았거든요`** (e.g., 참았다 $\\rightarrow$ 참았거든요, 없었다 $\\rightarrow$ 없었거든요)\n\n#### How It Works in Korean Conversation\n`-거든요` is used to provide background context, reasons, or private facts that **the listener does not yet know**. In natural conversation, it functions like saying *\"You see...\"*, *\"The thing is...\"*, or *\"...because, you know.\"* Ending a sentence with `-거든요` gives speech a lively, expressive, and explanatory feel.\n\n#### How It Works in the Lyrics\nSOYEON crafts the entire rhythmic build of the song with repeated `-거든요` endings:\n* **아쉬울 거도 없거든요** *(Because I have zero lingering regrets, you know)*\n* **열심히 살 생각 없었거든요** *(I never planned to work this hard in the first place, you see)*\n* **수백 번을 참았거든요** *(Because I've already held it in hundreds of times)*\n* **버킷리스트가 있거든요** *(The thing is, I have a bucket list!)*\n\nThis deliberate repetition mirrors an authentic heart-to-heart talk with a friend over a late-night meal.\n\n#### 2 Real-Life Spoken Examples\n1. **Hangul**: 저 내일 연차 썼거든요. 그래서 오늘 밤샘 게임 할 거예요.\n   * **Romanization**: Jeo naeil yeoncha sseotgeodeunnyo. Geuraeseo oneul bamsaem geim hal geoyeyo.\n   * **English**: You see, I took paid annual leave tomorrow, so I'm playing games all night tonight.\n2. **Hangul**: 그 식당 가지 마세요. 지난주에 가봤는데 서비스가 정말 별로였거든요.\n   * **Romanization**: Geu sikdang gaji maseyo. Jinanju-e gabwanneunde seobiseuga jeongmal byeolloyeotgeodeunnyo.\n   * **English**: Don't go to that restaurant. I went there last week, and the service was really terrible, you see.\n\n---\n\n<!-- article-illustration:kpop-2026-09-16-soyeon-퇴사할게여-02 -->\n<figure class=\"article-illustration my-8 block\">\n  <img src=\"/images/articles/kpop-2026-09-16-soyeon-퇴사할게여-02.webp\" alt=\"SOYEON (소연) - 퇴사할게여 (Narr. 기안84) Korean Grammar Formula and Sentence Patterns\" width=\"1536\" height=\"1024\" loading=\"lazy\" decoding=\"async\" class=\"w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover\" />\n  <figcaption class=\"mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed\">Figure 2: SOYEON (소연) - &#x27;퇴사할게여 (Narr. 기안84)&#x27; Key Grammar Formulas, Conjugation Patterns, and Conversational Usage</figcaption>\n</figure>\n<!-- /article-illustration:kpop-2026-09-16-soyeon-퇴사할게여-02 -->\n\n## 5. Pronunciation Secrets (연음 & 받침)\n\n### Secret 1: Mandatory Fortis Tensification (된소리되기) in `-(으)ㄹ` Endings\n* **Written**: `퇴사할게요`\n* **Actual Spoken Pronunciation**: `[퇴사할께요]` / `[퉤사할께요]`\n\nMany Korean learners pronounce `-(으)ㄹ게요` with a gentle, soft `[ㄱ]` sound because it is spelled with a single `ㄱ`. However, under standard Korean phonological rules, whenever the prospective modifier or ending `-(으)ㄹ` precedes a lax consonant (`ㄱ, ㄷ, ㅂ, ㅅ, ㅈ`), that consonant **must be pronounced as a tense double consonant (된소리)**: `[ㄲ, ㄸ, ㅃ, ㅆ, ㅉ]`.\n* Another lyric example: **살 생각** *(thought of living)* $\\rightarrow$ pronounced **`[살 쌩각]`**, NOT `[살 생각]`!\n\n### Secret 2: Double Final Consonant Resyllabification (연음 & 자음군 단순화)\n* **Written**: `없었거든요`\n* **Actual Spoken Pronunciation**: `[업써꺼든뇨]`\n\nLook at what happens across these five syllables:\n1. **없- (`ㅄ` batchim) + -었- (vowel suffix)**: When a complex double batchim meets a vowel, the second consonant carries over (liaison). Here, `ㅅ` shifts and tensifies into `[ㅆ]`, yielding `[업써]`. \n2. **-었- (`ㅆ` batchim) + -거- (consonant prefix)**: When `ㅆ` meets `ㄱ`, the representative sound of `ㅆ` (`[ㄷ]`) causes the subsequent `ㄱ` to tensify into `[ㄲ]`, yielding `[업써꺼]`. \n3. **-거든요**: In natural colloquial speech, nasal harmonization gives `-거든요` the smooth rhythm of `[든뇨]`. Hence: **`[업써꺼든뇨]`**.\n\n* **Bonus Liaison**: Look at **`문밖으로`** *(out that door)*: `문밖` ends in `ㄲ`. When followed by the particle `-으로`, `ㄲ` shifts directly to the next syllable: **`[문바끄로]`**, NOT `[문박으로]`.\n\n---\n\n## 6. Cultural Context & Lyric Nuance\n\n### 1. The Korean \"Toesa\" (퇴사) Culture & Memes\nIn South Korea's fast-paced corporate society, **퇴사 (resignation)** was once viewed with apprehension or career stigma. However, for the modern **MZ Generation (MZ세대)**, *toesa* has been reframed as a courageous act of self-preservation and mental health prioritization. \"Resignation Vlogs\" (퇴사 브이로그) and \"Resignation Memes\" (퇴사짤) are viral trends.\n\nSOYEON's lyric:\n> **\"모두 안녕히 계세요\"** *(Goodbye to everyone)*\n\n...is an unmistakable shout-out to Korea's most iconic resignation meme: the viral *Inuyasha* voice clip where the character Kagome floats into the sky shouting: *\"Goodbye everyone! I am casting off all worldly shackles and bondage to seek my own happiness!\"* (안녕히 계세요 여러분! 전 이 세상의 모든 굴레와 속박을 벗어던지고 제 행복을 찾아 떠납니다!).\n\n### 2. \"이팔청춘 (二八靑春)\" & Existential Cheer\n`이팔청춘` is a classic Korean four-character idiom (*사자성어*). Formed by $2 \\times 8 = 16$, it historically signifies the sweet bloom of youth (the teenage years through the early twenties). SOYEON puts a humorous, modern spin on it: *\"Even if we make a mistake in our prime youth, so what? In the end, we're all going to be grandmothers anyway!\"* This existential cheerfulness gives listeners permission to fail, pivot, and prioritize joy.\n\n### 3. Kian84's Reality Check Narration\nWebtoon artist and broadcaster **Kian84 (기안84)** is celebrated across Korea for his unvarnished, free-spirited authenticity. His mumbling commentary in the song:\n> **\"너 너 이거 또 거짓말하네 음\"** *(You... you're lying again, aren't you? Hmm)*\n\n...acts as the voice of real life. Every office worker has daydreamed about traveling the world, writing novels, and quitting on a whim. Kian84’s interruption represents the affectionate cynicism of a colleague who knows you'll probably show up to work tomorrow after all!\n\n---\n\n## 7. Interactive Practice & Quiz\n\nTest what you've learned from SOYEON's track with these three quick questions!\n\n### Question 1: Vocabulary Match\nMatch the Korean word from the song to its correct English definition:\n1. **당장 (dangjang)**\n2. **아쉽다 (aswipda)**\n3. **철없다 (cheoreopda)**\n\n* **Options**: \n  * A. To feel regretful or sad about missing something\n  * B. Right now / immediately\n  * C. Childish / lacking maturity\n\n### Question 2: Fill in the Blank\nComplete the employee's excuse using the correct explanatory grammar pattern learned in the song:\n\n> \"부장님, 죄송하지만 오늘은 먼저 가볼게요. 집에 급한 일이 _________.\"\n> *(Director, I'm sorry, but I will head out first today. You see, I have an urgent matter at home.)*\n\n* A) 있거든요\n* B) 있다면\n* C) 있을까요\n\n### Question 3: Cultural & Nuance Check\nWhy did SOYEON spell the song title as **'퇴사할게여'** with **'여'** instead of the grammatically standard **'퇴사할게요'** with **'요'**?\n* A) It is a typographical error by the record label.\n* B) It reflects casual, cute Korean texting style (*aegyo* chat tone) to give resigning a playful, ironic vibe.\n* C) '여' is the formal archaic ending used for royalty.\n\n<details>\n<summary>Click to reveal answers & explanations</summary>\n\n### Answers & Explanations\n1. **Vocabulary Match**: \n   * **1 $\\rightarrow$ B** (`당장` = immediately / right now)\n   * **2 $\\rightarrow$ A** (`아쉽다` = to feel lingering regret / reluctant to let go)\n   * **3 $\\rightarrow$ C** (`철없다` = immature / childish)\n2. **Fill in the Blank: A (`있거든요`)**\n   * **Explanation**: When explaining a private reason or background justification to a listener who doesn't know it, attach `-거든요` to the stem `있-` $\\rightarrow$ `있거든요`.\n3. **Cultural & Nuance Check: B**\n   * **Explanation**: Korean smartphone users frequently swap `-요` for `-여` or `-용` in casual messaging to soften the tone and sound charmingly nonchalant. SOYEON uses this texting style to subvert the rigid seriousness of resigning.\n</details>\n\n---\n\n## 8. Sing-Along & Shadowing Study Tip\n\nTo master SOYEON's rapid, conversational delivery and natural pronunciation:\n\n1. **The 3-Beat `-거든요` Rhythm Drill**: Practice saying the three key justification lines together without pausing: \n   * *없거든요* `[업꺼든뇨]` $\\rightarrow$ *있었거든요* `[이써꺼든뇨]` $\\rightarrow$ *참았거든요* `[차맏꺼든뇨]`.\n   * Notice how your tongue snaps down on the batchim before rolling into `-거든요`.\n2. **Shadowing at 0.8x Speed**: Load the track on YouTube or Spotify. Set playback speed to 0.8x. Focus on matching the **tensification** in `[퇴사할께요]` and `[살 쌩각]`. Once you nail the rhythm without stumbling, bring it back up to normal 1.0x speed!\n3. **Embody the Attitude**: Korean sentence endings like `-(으)ㄹ게요` and `-거든요` are deeply tied to emotional expression. Deliver the lines with a confident, sigh-of-relief smile to capture authentic native intonation!",
+      "faqs": [
+        {
+          "question": "What Korean level is required to understand '퇴사할게여' by SOYEON?",
+          "answer": "This song is ideal for Intermediate learners (TOPIK Level 2–3 / CEFR A2–B1). While the lyrics revolve around modern corporate themes, burnout, and dreams, the grammar patterns like '-(으)ㄹ게요' and '-거든요' are foundational conversational structures that every learner needs for daily spoken Korean."
+        },
+        {
+          "question": "What is the key Korean grammar point taught in this song?",
+          "answer": "The primary grammatical pattern is '-거든요' ('You see, it's because... / ...you know'), which is used to provide background reasons or context unfamiliar to the listener. The song also highlights '-(으)ㄹ게요' ('I will... / Let me...'), used to express a polite promise or decision directly to another person."
+        },
+        {
+          "question": "What does '이팔청춘 후회하면 어때요' mean in English?",
+          "answer": "'이팔청춘 후회하면 어때요' translates to 'We're in the prime of our youth—so what if we regret it?'. '이팔청춘 (二八靑春)' is a classic idiom meaning the bloom of youth (literally 2 x 8 = 16), and the phrase encourages embracing bold choices without paralyzing fear of failure."
+        }
+      ],
+      "slug": "2026-09-16-soyeon-퇴사할게여",
+      "heroImage": "/images/thumbnails/2026-09-16-soyeon-퇴사할게여.svg",
+      "article_images": [
+        {
+          "relative_url": "/images/articles/kpop-2026-09-16-soyeon-퇴사할게여-01.webp",
+          "asset_key": "kpop-2026-09-16-soyeon-퇴사할게여-01",
+          "kind": "lyrics_phonetics"
+        },
+        {
+          "relative_url": "/images/articles/kpop-2026-09-16-soyeon-퇴사할게여-02.webp",
+          "asset_key": "kpop-2026-09-16-soyeon-퇴사할게여-02",
+          "kind": "grammar_patterns"
+        }
+      ]
+    },
+    "review": {
+      "total_score": 80,
+      "verdict": "REVISE",
+      "strengths": [
+        "Excellent breakdown of complex conversational grammar patterns (-(으)ㄹ게요 and -거든요) with relatable, real-life examples.",
+        "Strong cultural contextualization of the 'toesa' (resignation) trend and Kian84's narration, providing great value for learners."
+      ],
+      "improvements": [
+        "Correct the phonetic transcription and Romanization of '원래'. Due to Korean lateralization rules (ㄴ+ㄹ), it is pronounced [월래] and romanized as 'wollae', not [원래] / 'wonrae'.",
+        "Fix the pronunciation guidance for the past tense '-었/았-' combined with '-거-'. '없었거든요' should be pronounced [업썻꺼든뇨] / [업썯꺼든뇨], not [업써꺼든뇨] (it is missing the 'ㄷ' sound from the 'ㅆ' batchim). The same error appears for '있었거든요' in Section 8.",
+        "Add the missing '3 FAQs' section, which is a mandatory requirement for the formatting criteria."
+      ],
+      "summary_for_user": "The lesson is highly engaging and does a fantastic job of breaking down authentic, conversational Korean grammar and modern workplace culture. However, it requires revisions to correct specific phonological transcription errors (such as the pronunciation of '원래' and '없었거든요') and must include the missing FAQ section to fully meet the structural requirements."
+    },
+    "review_report": {
+      "total_score": 80,
+      "verdict": "REVISE",
+      "strengths": [
+        "Excellent breakdown of complex conversational grammar patterns (-(으)ㄹ게요 and -거든요) with relatable, real-life examples.",
+        "Strong cultural contextualization of the 'toesa' (resignation) trend and Kian84's narration, providing great value for learners."
+      ],
+      "improvements": [
+        "Correct the phonetic transcription and Romanization of '원래'. Due to Korean lateralization rules (ㄴ+ㄹ), it is pronounced [월래] and romanized as 'wollae', not [원래] / 'wonrae'.",
+        "Fix the pronunciation guidance for the past tense '-었/았-' combined with '-거-'. '없었거든요' should be pronounced [업썻꺼든뇨] / [업썯꺼든뇨], not [업써꺼든뇨] (it is missing the 'ㄷ' sound from the 'ㅆ' batchim). The same error appears for '있었거든요' in Section 8.",
+        "Add the missing '3 FAQs' section, which is a mandatory requirement for the formatting criteria."
+      ],
+      "summary_for_user": "The lesson is highly engaging and does a fantastic job of breaking down authentic, conversational Korean grammar and modern workplace culture. However, it requires revisions to correct specific phonological transcription errors (such as the pronunciation of '원래' and '없었거든요') and must include the missing FAQ section to fully meet the structural requirements."
+    },
+    "human_edit_points": [],
+    "change_history": [],
+    "published_at": "2026-09-16 22:08:38",
+    "post_slug": "2026-09-16-soyeon-퇴사할게여",
+    "published_url": "https://kpop-hangul.github.io/blog/2026-09-16-soyeon-퇴사할게여/",
     "rejected_at": null,
     "rejection_reason": null
   }
