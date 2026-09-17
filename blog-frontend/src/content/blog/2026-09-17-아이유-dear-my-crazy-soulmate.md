@@ -2,7 +2,7 @@
 title: "Learn Korean with 아이유 - 'Dear my crazy soulmate': Lyrics, Vocabulary & Grammar Breakdown"
 description: "Master Korean with 아이유's hit 'Dear my crazy soulmate' (#7 on Melon Top 100)! Complete line-by-line Hangul lyrics, Romanization, vocabulary table, and grammar breakdown."
 pubDate: "2026-09-17"
-heroImage: "/images/thumbnails/2026-09-17-아이유-dear-my-crazy-soulmate.svg"
+heroImage: "/images/thumbnails/2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-thumbnail.png"
 category: "Intermediate (Level 2)"
 difficulty: "Intermediate"
 genre: "Dance & Pop"
@@ -63,12 +63,12 @@ Here is the central chorus that fans around the world are humming:
 
 ---
 
-<!-- article-illustration:kpop-2026-09-17-아이유-dear-my-crazy-soulmate-01 -->
-<figure class="article-illustration my-8 block">
-  <img src="/images/articles/kpop-2026-09-17-아이유-dear-my-crazy-soulmate-01.webp" alt="아이유 - Dear my crazy soulmate Lyrics and Phonetic Sound Change Diagram" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
-  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 1: 아이유 - &#x27;Dear my crazy soulmate&#x27; Syllable Block Structure, Phonetic Linking (연음), and Chorus Flow Guide</figcaption>
+<!-- article-illustration:2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-1 -->
+<figure class="article-illustration" style="margin: 2em 0;">
+  <img src="/images/articles/2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-1.png" alt="Korean sound linking: 음악을 is pronounced 으마글" loading="lazy" decoding="async" style="display: block; width: 100%; max-width: 100%; height: auto; border-radius: 0.75rem;" />
+  <figcaption style="margin-top: 0.65em; font-size: 0.95em; line-height: 1.6; color: #475569;">An original Korean pronunciation example showing consonant linking. Illustration generated with GPT.</figcaption>
 </figure>
-<!-- /article-illustration:kpop-2026-09-17-아이유-dear-my-crazy-soulmate-01 -->
+<!-- /article-illustration:2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-1 -->
 
 ## 3. Core Vocabulary Table
 
@@ -115,12 +115,12 @@ Master these essential words appearing throughout the song:
 
 ---
 
-<!-- article-illustration:kpop-2026-09-17-아이유-dear-my-crazy-soulmate-02 -->
-<figure class="article-illustration my-8 block">
-  <img src="/images/articles/kpop-2026-09-17-아이유-dear-my-crazy-soulmate-02.webp" alt="아이유 - Dear my crazy soulmate Korean Grammar Formula and Sentence Patterns" width="1536" height="1024" loading="lazy" decoding="async" class="w-full h-auto rounded-2xl border border-slate-200 shadow-md object-cover" />
-  <figcaption class="mt-2.5 text-center text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">Figure 2: 아이유 - &#x27;Dear my crazy soulmate&#x27; Key Grammar Formulas, Conjugation Patterns, and Conversational Usage</figcaption>
+<!-- article-illustration:2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-2 -->
+<figure class="article-illustration" style="margin: 2em 0;">
+  <img src="/images/articles/2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-2.png" alt="Korean grammar patterns -(으)ㄹ 수 없다 and -지 않고" loading="lazy" decoding="async" style="display: block; width: 100%; max-width: 100%; height: auto; border-radius: 0.75rem;" />
+  <figcaption style="margin-top: 0.65em; font-size: 0.95em; line-height: 1.6; color: #475569;">Original everyday examples of inability and doing an action without another action. Illustration generated with GPT.</figcaption>
 </figure>
-<!-- /article-illustration:kpop-2026-09-17-아이유-dear-my-crazy-soulmate-02 -->
+<!-- /article-illustration:2026-09-17-아이유-dear-my-crazy-soulmate-gpt-repair-20260917-body-2 -->
 
 ## 5. Pronunciation Secrets (연음 & 받침)
 
