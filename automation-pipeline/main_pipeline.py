@@ -4,6 +4,7 @@ import sys
 import yaml
 import argparse
 from datetime import datetime
+from modules.generation_control import legacy_generation_allowed
 
 # 에이전트 및 연동 모듈 로드
 from agents.keyword_harvester import KeywordHarvester
@@ -14,19 +15,19 @@ from integrations.github_publisher import GitHubPublisher
 from integrations.google_indexing import GoogleIndexing
 from integrations.telegram_bot import TelegramNotifier
 
-def load_config(config_path: str = "config/config.yaml") -> dict:
-    abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), config_path))
-    if not os.path.exists(abs_path):
-        print(f"⚠️ 설정 파일을 찾을 수 없습니다: {abs_path}")
-        return {}
-    with open(abs_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+def load_config(config_path="config/config.yaml"):
+    from modules.configuration import load_configuration
+    return load_configuration(os.path.dirname(__file__), config_path)
 
 def run_auto_pipeline(config, auto_approve=False, target_category=None):
+    if not legacy_generation_allowed(config):
+        return
     from daily_kpop_pipeline import run_daily_pipeline
     return run_daily_pipeline(count=1)
 
 def run_dryrun_pipeline(config: dict):
+    if not legacy_generation_allowed(config):
+        return
     print("=" * 60)
     print("🔍 [헬스체크 에이전트] 파이프라인 Dry-run 이상 탐지 가동 시작")
     print("=" * 60)
@@ -61,23 +62,39 @@ def run_dryrun_pipeline(config: dict):
         telegram.send_health_report({"error_details": f"🚨 [Dry-run 실패] 파이프라인 에러 감지: {e}"}, is_alert=True)
 
 def run_geeknews_weekly_pipeline(config):
+    if not legacy_generation_allowed(config):
+        return
     raise RuntimeError("K-Pop에서는 daily_kpop_pipeline.py를 사용하세요.")
+
+from daily_kpop_pipeline import publish_queued_draft, reconcile_queued_draft, DraftApprovalQueue
+
 
 def main():
     parser = argparse.ArgumentParser(description="K-Pop Hangul 자동화 블로그 파이프라인 (HITL Review Gate)")
     parser.add_argument("--mode", choices=["auto", "dryrun", "geeknews_weekly", "trend", "interactive", "report", "morning_report", "evening_report", "revenue_report", "traffic_report", "health", "test_telegram"], default="auto")
     parser.add_argument("--approve", action="store_true", help="호환 옵션: 자동 발행하지 않고 검토 큐에 저장")
     parser.add_argument("--publish-draft", type=str, default=None, help="대기 큐의 특정 draft_id 승인 및 발행")
+    parser.add_argument("--reconcile-draft", help="승인된 초안의 Pages 및 공개 이미지 확인")
+    parser.add_argument("--reconcile-all", action="store_true", help="배포 대기 중인 승인 초안 모두 확인")
     parser.add_argument("--list-queue", action="store_true", help="대기 큐 목록 조회")
     parser.add_argument("--category", type=str, default=None, help="특정 카테고리 지정")
     args = parser.parse_args()
 
     config = load_config()
+    if args.reconcile_draft or args.reconcile_all:
+        ids = [args.reconcile_draft] if args.reconcile_draft else [d["draft_id"] for d in DraftApprovalQueue().list_deployments()]
+        for draft_id in ids:
+            success, message = reconcile_queued_draft(config, draft_id)
+            print(f"{draft_id}: {'발행 확인 완료' if success else '배포 확인 대기'}: {message}")
+        return
+    if not (args.publish_draft or args.list_queue) and args.mode in ("auto", "dryrun", "geeknews_weekly", "trend", "interactive"):
+        if not legacy_generation_allowed(config):
+            return
     telegram = TelegramNotifier(config)
     tracker = PerformanceTracker(config)
 
     if args.list_queue:
-        from daily_kpop_pipeline import DraftApprovalQueue, ROOT_DIR
+        from daily_kpop_pipeline import ROOT_DIR
         queue = DraftApprovalQueue(ROOT_DIR)
         pending = queue.list_pending()
         print(f"\n📋 [대기 중인 K-Pop 초안 큐 ({len(pending)}건)]")
@@ -91,7 +108,7 @@ def main():
         if success:
             print(f"🎉 성공적으로 발행되었습니다: {res}")
         else:
-            print(f"❌ 발행 실패: {res}")
+            print(f"⏳ 발행 상태: {res}")
         return
 
     if args.mode == "auto":

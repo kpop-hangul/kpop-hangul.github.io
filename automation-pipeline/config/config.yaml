@@ -91,3 +91,7 @@ review_agent:
   enabled: true
   model_name: "gpt-6-astra"
   effort: "high"
+
+# New requests use the Codex + agy operations queue.
+operations:
+  legacy_generation_enabled: false

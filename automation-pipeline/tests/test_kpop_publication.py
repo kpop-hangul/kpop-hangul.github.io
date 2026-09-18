@@ -1,4 +1,5 @@
 import json
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
@@ -17,6 +18,14 @@ class KpopPublication(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name)
+        subprocess.run(['git','init','-q','-b','main',str(self.root)],check=True,capture_output=True)
+        for key,value in [('user.name','Test'),('user.email','test@example.invalid')]:
+            subprocess.run(['git','-C',str(self.root),'config',key,value],check=True,capture_output=True)
+        self.remote=self.root/'remote.git'
+        subprocess.run(['git','init','--bare','-q',str(self.remote)],check=True,capture_output=True)
+        subprocess.run(['git','-C',str(self.root),'remote','add','origin',str(self.remote)],check=True,capture_output=True)
+        self.network=patch('requests.sessions.Session.request',side_effect=AssertionError('offline network disabled'))
+        self.network.start();self.addCleanup(self.network.stop)
         self.queue=DraftApprovalQueue(str(self.root/'queue.json'))
         self.config={'github':{'repo_root':str(self.root),'blog_content_dir':str(self.root/'blog'),'auto_git_commit':True,'auto_git_push':True},'site':{'url':'https://example.invalid'}}
         self.id=self.queue.add_draft(lesson(),{'total_score':0},topic={'artist':'Artist','title':'Song'})
@@ -30,14 +39,21 @@ class KpopPublication(unittest.TestCase):
         self.assertFalse(success);self.assertEqual(self.queue.get_draft(self.id)['status'],'approved')
         self.record.assert_not_called();self.notifier.assert_not_called()
 
-    def test_retry_same_revision_after_failed_push(self):
-        with patch.object(GitHubPublisher,'_commit_paths',side_effect=RuntimeError('push rejected')):
+    def test_retry_same_revision_after_failed_push_waits_for_actual_deployment(self):
+        with patch.object(GitHubPublisher,'_push_commit',side_effect=RuntimeError('push rejected')):
             pipeline.publish_queued_draft(self.config,self.id,human_approved=True)
-        with patch.object(GitHubPublisher,'_commit_paths') as git:
-            success,url=pipeline.publish_queued_draft(self.config,self.id,human_approved=True)
+        success,message=pipeline.publish_queued_draft(self.config,self.id,human_approved=True)
+        self.assertFalse(success);self.assertIn('배포 확인 대기',message)
+        self.assertEqual(self.queue.get_draft(self.id)['status'],'deployment_pending')
+        self.record.assert_not_called();self.notifier.assert_not_called()
+        with patch('integrations.deployment_verifier.DeploymentVerifier.check',return_value={'status':'pending','message':'waiting'}):
+            self.assertFalse(pipeline.reconcile_queued_draft(self.config,self.id)[0])
+        self.record.assert_not_called();self.notifier.assert_not_called()
+        with patch('integrations.deployment_verifier.DeploymentVerifier.check',return_value={'status':'verified'}):
+            success,url=pipeline.reconcile_queued_draft(self.config,self.id)
         self.assertTrue(success);self.assertIn('/blog/test-song/',url)
-        self.assertEqual(self.queue.get_draft(self.id)['status'],'published');git.assert_called_once()
         self.record.assert_called_once();self.notifier.return_value.send_article_published.assert_called_once()
+        self.assertEqual(subprocess.check_output(['git','-C',str(self.root),'rev-list','--count','HEAD'],text=True).strip(),'1')
 
     def test_rejected_or_unapproved_cannot_publish(self):
         self.assertFalse(pipeline.publish_queued_draft(self.config,self.id)[0])
@@ -50,15 +66,17 @@ class KpopPublication(unittest.TestCase):
         self.assertFalse(pipeline.publish_queued_draft(self.config,self.id,human_approved=True)[0])
         self.assertFalse((self.root/'blog').exists())
 
-    def test_failed_queue_update_after_push_does_not_notify_success(self):
-        with patch.object(GitHubPublisher,'_commit_paths'),patch.object(self.queue,'mark_published',return_value=False):
-            self.assertFalse(pipeline.publish_queued_draft(self.config,self.id,human_approved=True)[0])
+    def test_failed_queue_update_after_verification_does_not_notify_success(self):
+        self.assertFalse(pipeline.publish_queued_draft(self.config,self.id,human_approved=True)[0])
+        with patch('integrations.deployment_verifier.DeploymentVerifier.check',return_value={'status':'verified'}),patch.object(self.queue,'mark_published',return_value=False):
+            self.assertFalse(pipeline.reconcile_queued_draft(self.config,self.id)[0])
         self.notifier.assert_not_called()
 
     def test_legacy_queue_slug_is_preserved_without_treating_new_post_as_update(self):
         path=Path(self.queue.queue_file);data=json.loads(path.read_text());data[0]['existing_slug']='test-song';path.write_text(json.dumps(data))
-        with patch.object(GitHubPublisher,'_commit_paths'):
-            self.assertTrue(pipeline.publish_queued_draft(self.config,self.id,human_approved=True)[0])
+        self.assertFalse(pipeline.publish_queued_draft(self.config,self.id,human_approved=True)[0])
+        self.assertEqual(self.queue.get_draft(self.id)['status'],'deployment_pending')
+        self.record.assert_not_called()
         self.assertTrue((self.root/'blog/test-song.md').is_file())
 
     def test_image_refresh_queues_full_article_without_overwriting_post(self):

@@ -1,4 +1,7 @@
+from modules.draft_queue import article_review_token
 import os
+import math
+from html import escape
 import json
 import re
 import subprocess
@@ -26,6 +29,17 @@ def _load_env_file():
             except Exception:
                 pass
 
+
+def _display_metric(value, decimals=0):
+    """Keep uncollected values distinct from measured zero."""
+    if value is None or isinstance(value, bool):
+        return "미수집"
+    try:
+        number = float(value)
+        return f"{number:,.{decimals}f}" if math.isfinite(number) else "미수집"
+    except (TypeError, ValueError):
+        return "미수집"
+
 class TelegramNotifier:
     """
     K-Pop Hangul 블로그 운영 텔레그램 스마트 알림 에이전트
@@ -48,7 +62,7 @@ class TelegramNotifier:
         self.api_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
 
     def _send_message(self, text: str, reply_markup: Optional[Dict] = None) -> bool:
-        if not self.bot_token or not self.chat_id:
+        if not self.enabled or not self.bot_token or not self.chat_id:
             print("[TelegramNotifier] ℹ️ 텔레그램 토큰 또는 Chat ID가 설정되지 않았습니다 (건너뜀).")
             return False
 
@@ -235,7 +249,7 @@ class TelegramNotifier:
         return self._send_message(msg, {"inline_keyboard": [
             [{"text": "📖 본문 초안 보기", "callback_data": f"view_draft:{draft_id}"},
              {"text": "✏️ 본문 직접 수정", "callback_data": f"edit_draft:{draft_id}"}],
-            [{"text": "✅ 검토 후 즉시 승인 및 발행", "callback_data": f"approve:{draft_id}"},
+            [{"text": "✅ 검토 후 승인 및 배포 요청", "callback_data": f"approve:{draft_id}:{article_review_token(article)}"},
              {"text": "❌ 발행 보류", "callback_data": f"reject:{draft_id}"}]]})
 
     # -------------------------------------------------------------
@@ -277,130 +291,64 @@ class TelegramNotifier:
     # 3. 일일 사이트 현황 보고 (아침 8시 / 저녁 7시)
     # -------------------------------------------------------------
     def send_daily_site_status(self, report_type: str, stats: Dict[str, Any]) -> bool:
-        is_morning = (report_type == "morning")
-        header_icon = "🌅" if is_morning else "🌆"
-        header_title = "일일 아침 사이트 브리핑 (08:00)" if is_morning else "일일 저녁 사이트 현황 보고 (19:00)"
-        now_str = datetime.now().strftime("%Y-%m-%d")
+        """Report inventory separately from uncollected audience/search metrics."""
+        total = _display_metric(stats.get("total_posts"))
+        today = _display_metric(stats.get("today_posts"))
+        drafts = _display_metric(stats.get("draft_posts"))
+        pv = _display_metric(stats.get("pageviews"))
+        indexed = _display_metric(stats.get("indexed_pages"))
+        msg = f"""📊 <b>[{escape(self.site_title)} 사이트 현황]</b>
+• 로컬 공개 대상 글: <b>{total}</b> (발행일이 오늘인 글 {today})
+• 초안: <b>{drafts}</b>
+• 블로그 페이지뷰: <b>{pv}</b>
+• 검색 색인 페이지: <b>{indexed}</b>
+• 공개 배포 상태: <b>{escape(str(stats.get('deployment_status') or '미확인'))}</b>
 
-        total_posts = stats.get("total_posts", 0)
-        today_posts = stats.get("today_posts", 0)
-        est_pageviews = stats.get("est_pageviews", 0)
-        indexed_pages = stats.get("indexed_pages", 0)
-        server_uptime = stats.get("uptime", "정상 가동 중")
-
-        msg = f"""{header_icon} <b>[{header_title}]</b> ({now_str})
-━━━━━━━━━━━━━━━━━━━━
-📊 <b>블로그 운영 지표</b>:
-  • 📚 총 발행 포스트: <b>{total_posts}개</b> (+{today_posts}건 오늘 발행)
-  • 👁️ 예상 일일 조회수: <b>{est_pageviews:,} PV</b>
-  • 🔍 구글 검색 색인: <b>{indexed_pages}개 페이지</b>
-  • 🍓 라즈베리파이 상태: <b>{server_uptime}</b>
-
-🔗 <b>블로그 주소</b>: <a href="{self.site_url}">{self.site_url}</a>
-💡 <i>매일 정해진 스케줄(아침 07:00 작성, 08:00/19:00 브리핑)로 무인 운영됩니다.</i>"""
-
+미수집은 0이 아닙니다. 글 수로 방문수·색인수를 추정하지 않습니다.
+<a href="{escape(self.site_url, quote=True)}">블로그 확인</a>"""
         return self._send_message(msg)
+
 
     # -------------------------------------------------------------
     # 3-1. 오늘 블로그 클릭 & 뷰(View) 트래픽 일일 보고
     # -------------------------------------------------------------
     def generate_click_view_report_text(self, traffic_data: Dict[str, Any]) -> str:
-        """
-        오늘의 실질적인 클릭 및 조회수(PV/UV) 카운트 보고서 텍스트 생성
-        """
-        now_str = datetime.now().strftime("%Y-%m-%d")
-        today_views = traffic_data.get("today_views", 0)
-        today_uv = traffic_data.get("today_uv", 0)
-        today_clicks = traffic_data.get("today_clicks", 0)
-        ctr = traffic_data.get("ctr", 0.0)
-        cumulative = traffic_data.get("cumulative_views", 0)
-        growth = traffic_data.get("growth_vs_yesterday", 0.0)
-        total_posts = traffic_data.get("total_posts", 0)
+        """Render only explicitly measured blog analytics, never repository traffic."""
+        measured = (traffic_data.get("status") == "measured"
+                    and traffic_data.get("is_measured") is True
+                    and traffic_data.get("source") in ("ga4", "goatcounter"))
+        def metric(key, decimals=0):
+            return _display_metric(traffic_data.get(key) if measured else None, decimals)
+        source = traffic_data.get("source") if measured else "미연결"
+        categories = []
+        for name, values in list(traffic_data.get("category_views", {}).items())[:4] if measured else []:
+            categories.append(f"• {escape(str(name))}: {_display_metric(values.get('views'))} PV")
+        top_posts = []
+        for post in traffic_data.get("top_posts", [])[:3] if measured else []:
+            top_posts.append(f"• {escape(str(post.get('title', '')))}: {_display_metric(post.get('views'))} PV")
+        sources = []
+        for info in traffic_data.get("sources", {}).values():
+            sources.append(f"• {escape(str(info.get('name', '')))}: {escape(str(info.get('detail') or info.get('status') or '미수집'))}")
+        return f"""📈 <b>[{escape(self.site_title)} 블로그 트래픽]</b>
+• 수집 출처: <b>{escape(str(source))}</b>
+• 기준일: {escape(str(traffic_data.get('date') or '미확인'))}
+• 페이지뷰: <b>{metric('today_views')}</b>
+• 순 방문자: <b>{metric('today_uv')}</b>
+• 독자 상호작용 클릭: <b>{metric('today_clicks')}</b>
+• 클릭률: <b>{metric('ctr', 2)}</b> (단위 %)
+• 전일 대비 증감: <b>{metric('growth_vs_yesterday', 2)}</b> (단위 %)
+• 로컬 공개 대상 글: <b>{_display_metric(traffic_data.get('total_posts'))}</b>
 
-        growth_sign = "+" if growth >= 0 else ""
-        growth_badge = f"{growth_sign}{growth}%"
+<b>카테고리별 조회</b>
+{chr(10).join(categories) or '미수집'}
+<b>조회수 상위 글</b>
+{chr(10).join(top_posts) or '미수집'}
 
-        # 카테고리별 유입 점유율
-        cat_views = traffic_data.get("category_views", {})
-        cat_lines = []
-        for cat_name, c_data in list(cat_views.items())[:6]:
-            cat_pv = c_data.get("views", 0)
-            cat_ratio = c_data.get("ratio", 0.0)
-            cat_lines.append(f"  • 🏷️ <b>{cat_name}</b>: <code>{cat_pv:,} PV</code> ({cat_ratio}%)")
-        cat_html = "\n".join(cat_lines) if cat_lines else "  • 집계 중\n"
+<b>수집 연결 상태</b>
+{chr(10).join(sources) or '미수집'}
 
-        # 인기 포스트 TOP 3
-        top_posts = traffic_data.get("top_posts", [])
-        top_lines = []
-        for i, p in enumerate(top_posts[:3], 1):
-            p_title = p.get("title", "")
-            p_views = p.get("views", 0)
-            p_clicks = p.get("clicks", 0)
-            p_slug = p.get("slug", "")
-            post_url = f"{self.site_url.rstrip('/')}/blog/{p_slug}/" if p_slug else self.site_url
-            top_lines.append(f"  <b>{i}.</b> <a href=\"{post_url}\">{p_title}</a>\n     └ 👁️ <code>{p_views:,} 뷰</code> | 🖱️ <code>{p_clicks} 클릭</code>")
-        top_html = "\n".join(top_lines) if top_lines else "  • 집계 중\n"
+미수집은 0이 아닙니다. GitHub 저장소 조회는 블로그 방문에 포함하지 않습니다."""
 
-        is_measured = traffic_data.get("is_measured", False)
-        latest_date = traffic_data.get("latest_active_date", "")
-        latest_views = traffic_data.get("latest_active_views", 0)
-        total_uniques_14d = traffic_data.get("total_uniques_14d", 0)
-        today_posts = traffic_data.get("today_posts", 0)
-
-        # 3대 실측 소스 연동 현황
-        sources = traffic_data.get("sources", {})
-        gh_info = sources.get("github", {})
-        goat_info = sources.get("goatcounter", {})
-        ga_info = sources.get("ga4", {})
-
-        gh_status = gh_info.get('status', '연동 대기')
-        gh_detail = gh_info.get('detail', '')
-        goat_status = goat_info.get('status', '연동 활성')
-        goat_dash = goat_info.get('dashboard', '')
-        ga_status = ga_info.get('status', '대기')
-        ga_detail = ga_info.get('detail', '')
-
-        if is_measured:
-            subtitle = "📢 <i>GitHub Pages 공식 Traffic API 및 실시간 웹 분석 실측치로 100% 정합 집계된 보고서입니다.</i>"
-            today_note = "<i>(GitHub 서버 당일 집계 주기 반영 대기)</i>" if today_views == 0 else f"({growth_badge} 전일비)"
-            summary_title = "📊 <b>공식 실측 트래픽 요약 (GitHub 공식 기준)</b>:"
-            cumulative_line = f"  • 📚 <b>최근 14일 공식 누적 뷰</b>: <b>{cumulative:,} PV</b> ({total_uniques_14d}명 순방문)"
-            if latest_date and today_views == 0:
-                cumulative_line += f"\n  • ⏱️ <b>가장 최근 활성 유입일</b>: <code>{latest_date}</code> ({latest_views} PV)"
-        else:
-            subtitle = "📢 <i>현재 애드센스 심사/등록 준비 단계로, 트래픽 유입 지표를 카운트하여 보고합니다.</i>"
-            today_note = f"({growth_badge} 전일비)"
-            summary_title = "📊 <b>오늘의 핵심 트래픽 요약</b>:"
-            cumulative_line = f"  • 📚 <b>사이트 누적 총 조회수</b>: <b>{cumulative:,} PV</b> (총 {total_posts}개 포스트)"
-
-        msg = f"""📈 <b>[{self.site_title} 오늘 트래픽 & 클릭/뷰 보고]</b> ({now_str})
-━━━━━━━━━━━━━━━━━━━━
-{subtitle}
-
-{summary_title}
-  • 👁️ <b>오늘 실측 페이지뷰 (PV)</b>: <b>{today_views:,} 회</b> {today_note}
-  • 👥 <b>오늘 실측 순 방문자 (UV)</b>: <b>{today_uv:,} 명</b>
-  • 🖱️ <b>독자 상호작용 클릭수</b>: <b>{today_clicks:,} 회</b> (클릭률 <code>{ctr:.2f}%</code>)
-{cumulative_line}
-  • 📝 <b>사이트 총 포스트</b>: <b>{total_posts}개</b> (+{today_posts}건 오늘 추가)
-
-📂 <b>카테고리/장르별 점유율</b>:
-{cat_html}
-
-🔥 <b>오늘 주목할 인기 곡 TOP 3</b>:
-{top_html}
-
-━━━━━━━━━━━━━━━━━━━━
-📡 <b>3대 실측 트래픽 트래커 현황</b>:
-  • 🐙 <b>GitHub Pages</b>: {gh_status} <i>({gh_detail})</i>
-  • 🐐 <b>GoatCounter</b>: {goat_status} (<a href="{goat_dash}">실시간 대시보드</a>)
-  • 📊 <b>GA4</b>: {ga_status} <i>({ga_detail})</i>
-
-💡 <b>운영 인사이트</b>:
-• 멜론 & 스포티파이 인기 차트 기반 글로벌 K-Pop 한글 학습 유입 진행 중
-• 독자 클릭률(CTR)이 높은 인기 곡 포스트에 추후 애드센스 광고 최우선 배치 예정
-🌐 <b>블로그 홈</b>: <a href="{self.site_url}">{self.site_url}</a>"""
-        return msg
 
     def send_click_view_daily_report(self, traffic_data: Dict[str, Any]) -> bool:
         """
@@ -412,53 +360,53 @@ class TelegramNotifier:
     # -------------------------------------------------------------
     # 4. 광고 수익 현황 일일 보고
     # -------------------------------------------------------------
+    def generate_adsense_report_text(self, revenue_data: Dict[str, Any]) -> str:
+        """AdSense's estimated earnings in the API-returned currency, without FX."""
+        currency = revenue_data.get("currency")
+        valid = (revenue_data.get("source") == "google_adsense_v2"
+                 and revenue_data.get("status") in ("measured", "partial", "no_data"))
+        def metric(key, decimals=0):
+            return _display_metric(revenue_data.get(key) if valid else None, decimals)
+        def money(key):
+            if not currency:
+                return "미수집"
+            value = metric(key, 2)
+            return f"{value} {escape(str(currency))}" if value != "미수집" else value
+        period = f"{revenue_data.get('start_date') or '미확인'} ~ {revenue_data.get('end_date') or '미확인'}"
+        month_period = f"{revenue_data.get('month_start_date') or '미확인'} ~ {revenue_data.get('month_end_date') or '미확인'}"
+        details = escape(str(revenue_data.get("reason") or revenue_data.get("status") or "unavailable"))
+        warnings = revenue_data.get("warnings") or []
+        warning_text = "\nAPI 안내: " + escape("; ".join(str(w) for w in warnings)) if warnings else ""
+        return f"""💰 <b>[{escape(self.site_title)} AdSense 실적]</b>
+• 대상 사이트: <code>{escape(str(revenue_data.get('site_domain') or '미확인'))}</code>
+• 수집 상태: <b>{details}</b>
+• 당일 기간: {escape(period)} (AdSense 계정 시간대)
+• 당일 예상 수익: <b>{money('estimated_earnings')}</b>
+• 월 누적 기간: {escape(month_period)}
+• 월 누적 예상 수익: <b>{money('month_total')}</b>
+• 광고 노출수: <b>{metric('impressions')}</b>
+• 광고 클릭수: <b>{metric('clicks')}</b>
+• 노출 대비 클릭률: <b>{metric('ctr', 2)}</b> (단위 %)
+• 광고 노출 RPM: <b>{money('rpm')}</b>
+• 페이지 RPM: <b>{money('page_rpm')}</b>{warning_text}
+
+AdSense API의 예상 수익이며 확정 지급액이 아닙니다.
+미수집과 실제 0을 구분하며 임의 환율로 환산하지 않습니다."""
+
+
     def send_adsense_daily_report(self, revenue_data: Dict[str, Any]) -> bool:
-        now_str = datetime.now().strftime("%Y-%m-%d")
-        est_earnings = revenue_data.get("est_earnings_usd", 0.0)
-        est_krw = int(est_earnings * 1350)
-        impressions = revenue_data.get("impressions", 0)
-        clicks = revenue_data.get("clicks", 0)
-        ctr = revenue_data.get("ctr", 0.0)
-        rpm = revenue_data.get("rpm", 0.0)
-        month_total = revenue_data.get("month_total_usd", 0.0)
+        return self._send_message(self.generate_adsense_report_text(revenue_data))
 
-        msg = f"""💰 <b>[구글 애드센스 일일 수익 보고]</b> ({now_str})
-━━━━━━━━━━━━━━━━━━━━
-💵 <b>오늘 예상 수익</b>: <b>${est_earnings:.2f} USD</b> (약 {est_krw:,}원)
-📅 <b>이번 달 누적 수익</b>: <b>${month_total:.2f} USD</b>
-
-📊 <b>세부 광고 지표</b>:
-  • 🎯 광고 노출수: <code>{impressions:,}회</code>
-  • 🖱️ 클릭수: <code>{clicks}회</code>
-  • 📈 클릭률 (CTR): <code>{ctr:.2f}%</code>
-  • 💡 1,000회 노출당 수익 (RPM): <code>${rpm:.2f}</code>
-
-🚀 <i>SEO 롱테일 키워드 유입이 증가할수록 수익이 가파르게 상승합니다.</i>"""
-
-        return self._send_message(msg)
 
     # -------------------------------------------------------------
     # 5. 시스템 헬스 / 장애 긴급 알림
     # -------------------------------------------------------------
     def send_health_report(self, health_data: Dict[str, Any], is_alert: bool = False) -> bool:
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-        status_icon = "🚨" if is_alert else "🍓"
-        status_title = "시스템 장애 경보" if is_alert else "라즈베리파이 5 헬스체크 리포트"
-
-        cpu_temp = health_data.get("cpu_temp", "48.5°C")
-        disk_free = health_data.get("disk_free", "1.7TB (사용률 2%)")
-        git_status = health_data.get("git_status", "정상 동기화")
-        timer_status = health_data.get("timer_status", "모든 타이머 정상 활성 (Active)")
-        error_details = health_data.get("error_details", "")
-
-        err_block = f"\n⚠️ <b>장애 원인</b>: <code>{error_details}</code>\n" if is_alert and error_details else ""
-
-        msg = f"""{status_icon} <b>[{status_title}]</b> ({now_str})
-━━━━━━━━━━━━━━━━━━━━
-🌡️ <b>CPU 온도</b>: <b>{cpu_temp}</b>
-💾 <b>NVMe SSD 여유 공간</b>: {disk_free}
-⏰ <b>Systemd 스케줄러</b>: {timer_status}
-🐙 <b>Git 자동 배포 상태</b>: {git_status}{err_block}
-✅ <i>24/7 백그라운드 Linger 모드로 안정적으로 가동 중입니다.</i>"""
-
-        return self._send_message(msg)
+        lines = []
+        for label, key in (("CPU 온도", "cpu_temp"), ("디스크 여유", "disk_free"),
+                           ("스케줄러", "timer_status"), ("Git 동기화", "git_status")):
+            lines.append(f"• {label}: {escape(str(health_data.get(key) or '미확인'))}")
+        error = health_data.get("error_details")
+        if is_alert and error:
+            lines.append("• 오류: " + escape(str(error)))
+        return self._send_message("🖥️ <b>[시스템 확인]</b>\n" + "\n".join(lines))

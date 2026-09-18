@@ -14,12 +14,12 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 from integrations.telegram_bot import _load_env_file, TelegramNotifier
 from integrations.antigravity_runner import AntigravityRunner
 from agents.performance_tracker import PerformanceTracker
-from modules.draft_queue import DraftApprovalQueue
+from modules.draft_queue import DraftApprovalQueue, article_review_token
 from modules.gpt_images import prepare_article_images
 from modules.agent_manager import AgentManager
 from agents.editorial_reviewer import EditorialReviewAgent
 from templates.prompt_templates import EDITORIAL_RULES
-from daily_kpop_pipeline import load_config, publish_queued_draft
+from daily_kpop_pipeline import load_config, publish_queued_draft, reconcile_queued_draft
 from agents.content_writer import ContentWriter
 from agents.policy_inspector import PolicyInspector
 from integrations.github_publisher import GitHubPublisher
@@ -361,7 +361,7 @@ async def handle_queue_command(update: Update, context: ContextTypes.DEFAULT_TYP
             f"  • 감수 점수: <b>{score}점</b> ({verdict}) | 📅 {created}\n"
         )
         keyboard.append([
-            InlineKeyboardButton(f"✅ 승인 #{idx}", callback_data=f"approve:{draft_id}"),
+            InlineKeyboardButton(f"✅ 승인 #{idx}", callback_data=f"approve:{draft_id}:{article_review_token(d.get('article', {}))}"),
             InlineKeyboardButton(f"✏️ 수정 #{idx}", callback_data=f"edit_draft:{draft_id}"),
             InlineKeyboardButton(f"📖 초안 #{idx}", callback_data=f"view_draft:{draft_id}"),
             InlineKeyboardButton(f"❌ 보류 #{idx}", callback_data=f"reject:{draft_id}")
@@ -402,18 +402,18 @@ async def handle_approve_command(update: Update, context: ContextTypes.DEFAULT_T
         parse_mode="HTML"
     )
     
-    success, res = publish_queued_draft(config, draft["draft_id"], human_approved=True)
+    success, res = await asyncio.to_thread(publish_queued_draft, config, draft["draft_id"], human_approved=True)
     if success:
         await status_msg.edit_text(
-            f"🎉 <b>[포스팅 승인 및 저장소 반영 요청 완료]</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎉 <b>[공개 글·이미지 배포 확인 완료]</b>\n━━━━━━━━━━━━━━━━━━━━\n"
             f"📌 <b>제목</b>: <b>{draft.get('title')}</b>\n"
             f"🔗 <b>글 바로가기</b>: <a href=\"{res}\">{res}</a>\n\n"
-            f"✨ <i>저장소 반영 요청이 완료되었습니다. Pages 배포 결과와 실제 URL을 확인하세요.</i>",
+            f"✨ <i>해당 커밋의 Pages 성공과 공개 글·이미지 파일을 확인했습니다.</i>",
             parse_mode="HTML",
             disable_web_page_preview=False
         )
     else:
-        await status_msg.edit_text(f"❌ 배포 실패: {res}")
+        await status_msg.edit_text(f"⏳ 발행 상태: {res}")
 
 @require_allowed_chat
 async def handle_reject_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1265,7 +1265,7 @@ async def refine_queued_draft(message, chat_id, user_feedback, context):
         )
 
         keyboard = [
-            [InlineKeyboardButton("🚀 수정본 즉시 승인 및 발행", callback_data=f"approve:{draft_id}")],
+            [InlineKeyboardButton("🚀 수정본 즉시 승인 및 발행", callback_data=f"approve:{draft_id}:{article_review_token(queue.get_draft(draft_id).get('article', {}))}")],
             [
                 InlineKeyboardButton("✏️ 추가 수정하기", callback_data=f"edit_draft:{draft_id}"),
                 InlineKeyboardButton("📖 수정본 전문 보기", callback_data=f"view_draft:{draft_id}")
@@ -1285,71 +1285,42 @@ async def refine_queued_draft(message, chat_id, user_feedback, context):
 # -------------------------------------------------------------
 # STEP 3: PUBLISHING TO GITHUB PAGES
 # -------------------------------------------------------------
+def _submit_captured_approval(session, approval, *, editing=False):
+    queue = DraftApprovalQueue()
+    article = approval["article"]
+    if editing and article.get("new_slug") not in (None, "", approval["slug"]):
+        return None, False, "URL 변경은 별도 이전 검토가 필요합니다. 기존 슬러그를 유지해 수정하세요."
+    # A captured token cannot authorize a different article from mutable session data.
+    draft_id = session.get("publication_draft_id")
+    if not draft_id:
+        draft_id = queue.add_draft(article, {"total_score": 0, "verdict": "HUMAN_REVIEWED"},
+                                  topic=session.get("topic", {}), existing_slug=approval.get("slug") if editing else None)
+        session["publication_draft_id"] = draft_id
+    success, message = publish_queued_draft(config, draft_id, human_approved=True,
+                                          expected_review_token=article_review_token(article))
+    return draft_id, success, message
+
+
 async def execute_publish(chat_id, context, is_draft=True, approval=None):
     session = sessions.get(chat_id)
     if not session:
-        await context.bot.send_message(chat_id=chat_id, text="⚠️ 발행할 작업 세션을 찾을 수 없습니다.")
+        await context.bot.send_message(chat_id=chat_id, text="발행할 작업 세션이 없습니다.")
         return
-
-    # An approval of a plan is not approval of a not-yet-written article.
     if not is_draft or not session.get("draft"):
         await create_article_draft(chat_id, None, context)
         return
-
     if not approval or approval.get("session") is not session:
-        await context.bot.send_message(chat_id=chat_id, text="초안 버전이 바뀌었습니다. 최신 본문에 표시된 승인 버튼을 사용하세요.")
+        await context.bot.send_message(chat_id=chat_id, text="최신 본문에 표시된 승인 버튼을 사용하세요.")
         return
-
-    status_msg = await context.bot.send_message(
-        chat_id=chat_id,
-        text="🚀 <b>승인한 초안 버전을 저장소에 반영하는 중입니다...</b>",
-        parse_mode="HTML"
-    )
-
+    status = await context.bot.send_message(chat_id=chat_id, text="승인한 초안을 발행 큐에 저장하고 Push를 요청합니다.")
     try:
-        writer = ContentWriter(config)
-        publisher = GitHubPublisher(config)
-        inspector = PolicyInspector(config)
-        telegram = TelegramNotifier(config)
-        indexer = GoogleIndexing(config)
-
-        article = approval["article"]
-
-        inspection = inspector.inspect_article(article)
-        saved_path = publisher.publish_article(article, human_approved=True)
-        
-        site_url = SITE_URL
-        post_slug = os.path.splitext(os.path.basename(saved_path))[0]
-        full_post_url = f"{site_url.rstrip('/')}/blog/{post_slug}/"
-
-        indexer.ping_sitemap()
-        telegram.send_article_published(article, inspection, full_post_url)
-
-        # Clear session
-        if sessions.get(chat_id) is session:
+        draft_id, success, message = await asyncio.to_thread(_submit_captured_approval, session, approval)
+        await status.edit_text(f"{'공개 배포 확인 완료' if success else '발행 상태'}: {message}\n초안: {draft_id or '-'}\n배포 확인: /reconcile {draft_id or ''}")
+        if draft_id and sessions.get(chat_id) is session:
             del sessions[chat_id]
-
-        msg = f"""🎉 <b>[저장소 반영 요청 완료]</b>
-━━━━━━━━━━━━━━━━━━━━
-📌 <b>제목</b>: <b>{article.get('title')}</b>
-🏷️ <b>카테고리</b>: {article.get('category')}
-📊 <b>형식 점검 참고값</b>: {inspection.get('score', 90)}점 ({inspection.get('char_count', 1500):,}자)
-
-🔗 <b>글 바로가기</b>:
-<a href="{full_post_url}">{full_post_url}</a>
-
-✨ <i>저장소 커밋/Push 요청이 완료되었습니다. Pages 배포 결과와 공개 URL 반영은 별도로 확인하세요.</i>"""
-
-        reply_markup = {
-            "inline_keyboard": [
-                [{"text": "🌐 게시글 확인하기", "url": full_post_url}]
-            ]
-        }
-        await status_msg.edit_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=False)
-
-    except Exception as e:
-        logger.error(f"Error in execute_publish: {e}")
-        await status_msg.edit_text(f"❌ 배포 중 오류가 발생했습니다: {e}")
+    except Exception as exc:
+        logger.error("Publication submission failed: %s", type(exc).__name__)
+        await status.edit_text("발행 큐 또는 저장소 처리가 중단되었습니다. /queue에서 초안 상태를 확인하세요.")
     finally:
         session["busy"] = False
         session.pop("publication_inflight", None)
@@ -1531,60 +1502,33 @@ async def process_edit_input(message, user_text, blog_url_match, context, is_upd
 
 async def execute_edit_publish(chat_id, context, approval=None):
     session = sessions.get(chat_id)
-    if not session or not session.get("data"):
-        await context.bot.send_message(chat_id=chat_id, text="⚠️ 수정할 작업 세션이 없습니다.")
+    if not session or not session.get("data") or not approval or approval.get("session") is not session:
+        await context.bot.send_message(chat_id=chat_id, text="최신 수정안의 승인 버튼을 사용하세요.")
         return
-
-    if not approval or approval.get("session") is not session:
-        await context.bot.send_message(chat_id=chat_id, text="수정안 버전이 바뀌었습니다. 최신 수정안의 승인 버튼을 사용하세요.")
-        return
-
-    status_msg = await context.bot.send_message(
-        chat_id=chat_id,
-        text="✍️ <b>수정된 내용을 저장하고 GitHub Pages에 재배포 중입니다...</b>",
-        parse_mode="HTML"
-    )
-
+    status = await context.bot.send_message(chat_id=chat_id, text="승인한 수정안을 발행 큐에 저장합니다.")
     try:
-        slug = approval["slug"]
-        article_data = approval["article"]
-        new_slug = article_data.get("new_slug")
-        publisher = GitHubPublisher(config)
-        indexer = GoogleIndexing(config)
-        
-        saved_path, final_slug = publisher.update_existing_article(slug, article_data, new_slug=new_slug, human_approved=True)
-        site_url = SITE_URL
-        full_post_url = f"{site_url.rstrip('/')}/blog/{final_slug}/"
-        
-        indexer.ping_sitemap()
-        
-        if sessions.get(chat_id) is session:
+        draft_id, success, message = await asyncio.to_thread(_submit_captured_approval, session, approval, editing=True)
+        await status.edit_text(f"{'공개 배포 확인 완료' if success else '발행 상태'}: {message}\n초안: {draft_id or '-'}\n배포 확인: /reconcile {draft_id or ''}")
+        if draft_id and sessions.get(chat_id) is session:
             del sessions[chat_id]
-
-        slug_changed_note = f"\n🔗 <b>새 URL</b>: <a href=\"{full_post_url}\">{full_post_url}</a>\n" if final_slug != slug else ""
-
-        msg = f"""🎉 <b>[포스팅 수정 및 저장소 반영 요청 완료]</b>
-━━━━━━━━━━━━━━━━━━━━
-📌 <b>제목</b>: <b>{article_data.get('title')}</b>
-💡 <b>수정 사항</b>: {article_data.get('change_summary', '수정 완료')}{slug_changed_note}
-🔗 <b>글 바로가기</b>:
-<a href="{full_post_url}">{full_post_url}</a>
-
-✨ <i>저장소 반영 요청이 완료되었습니다. Pages 결과와 공개 URL은 별도로 확인하세요.</i>"""
-
-        reply_markup = {
-            "inline_keyboard": [
-                [{"text": "🌐 수정된 글 확인하기", "url": full_post_url}]
-            ]
-        }
-        await status_msg.edit_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=False)
-
-    except Exception as e:
-        logger.error(f"Error in execute_edit_publish: {e}")
-        await status_msg.edit_text(f"❌ 수정 배포 중 오류가 발생했습니다: {e}")
+    except Exception as exc:
+        logger.error("Edit submission failed: %s", type(exc).__name__)
+        await status.edit_text("수정안 저장이 중단되었습니다. /queue에서 초안 상태를 확인하세요.")
     finally:
         session["busy"] = False
         session.pop("publication_inflight", None)
+
+
+@require_allowed_chat
+async def handle_reconcile_command(update, context):
+    if not context.args:
+        await update.message.reply_text("/reconcile <draft_id>로 승인한 글의 배포 결과를 확인하세요.")
+        return
+    draft_id = context.args[0]
+    progress = await update.message.reply_text("해당 커밋의 Pages 작업과 공개 글·이미지를 한 번 확인합니다.")
+    success, message = await asyncio.to_thread(reconcile_queued_draft, config, draft_id)
+    await progress.edit_text(f"{'공개 배포 확인 완료' if success else '배포 확인 대기'}: {message}")
+
 
 # -------------------------------------------------------------
 # BUTTON CALLBACK HANDLER
@@ -1607,19 +1551,20 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # HITL 대기 큐 버튼 콜백
     if data.startswith("approve:"):
-        target_id = data.split("approve:", 1)[1]
-        await query.edit_message_text("🚀 <b>[초안 승인 접수]</b> GitHub Pages 배포를 시작합니다...", parse_mode="HTML")
-        success, res = publish_queued_draft(config, target_id, human_approved=True)
-        if success:
-            await query.message.reply_text(
-                f"🎉 <b>[포스팅 승인 및 저장소 반영 요청 완료]</b>\n━━━━━━━━━━━━━━━━━━━━\n"
-                f"🔗 <b>글 바로가기</b>: <a href=\"{res}\">{res}</a>\n\n"
-                f"✨ <i>저장소 반영 요청이 완료되었습니다. Pages 배포 결과와 실제 URL을 확인하세요.</i>",
-                parse_mode="HTML",
-                disable_web_page_preview=False
-            )
-        else:
-            await query.message.reply_text(f"❌ 배포 실패: {res}")
+        parts = data.split(":")
+        if len(parts) != 3:
+            await query.message.reply_text("이 승인 버튼에는 초안 버전이 없습니다. /queue에서 최신 본문과 승인 버튼을 확인하세요.")
+            return
+        _, target_id, token = parts
+        queue = DraftApprovalQueue()
+        draft = queue.get_draft(target_id)
+        is_peer = False
+        if not draft or token != article_review_token(draft.get("article", {})):
+            await query.message.reply_text("초안 버전이 바뀌었습니다. /queue에서 최신 본문을 검토하고 승인하세요.")
+            return
+        await query.edit_message_text("승인한 초안 버전의 배포를 요청합니다.")
+        success, res = await asyncio.to_thread(publish_queued_draft, config, target_id, human_approved=True, expected_review_token=token)
+        await query.message.reply_text(f"{'공개 배포 확인 완료' if success else '발행 상태'}: {res}\n배포 확인: /reconcile {target_id}")
         return
 
     if data.startswith("reject:"):
@@ -1853,6 +1798,7 @@ async def post_init(application):
         BotCommand("edit", "기존 글 내용 또는 URL 수정"),
         BotCommand("help", "사용 가이드 및 명령어 보기"),
         BotCommand("queue", "발행 대기 초안 목록 조회"),
+        BotCommand("reconcile", "승인된 글의 공개 배포 확인"),
         BotCommand("reject", "대기 초안 발행 보류"),
         BotCommand("review", "초안 AI 감수 보고서 조회"),
         BotCommand("run", "🚀 K-Pop 글 작성 파이프라인 즉시 가동"),
@@ -1887,6 +1833,7 @@ def main():
     app.add_handler(CommandHandler("reset", handle_cancel))
     app.add_handler(CommandHandler("queue", handle_queue_command))
     app.add_handler(CommandHandler("approve", handle_approve_command))
+    app.add_handler(CommandHandler("reconcile", handle_reconcile_command))
     app.add_handler(CommandHandler("reject", handle_reject_command))
     app.add_handler(CommandHandler("review", handle_review_command))
     app.add_handler(CommandHandler("write", handle_write_command))

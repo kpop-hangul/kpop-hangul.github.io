@@ -1,34 +1,24 @@
+"""Check sitemap availability; this does not submit URLs or confirm indexing."""
 import requests
-from typing import Dict, Any
+from xml.etree import ElementTree
+
 
 class GoogleIndexing:
-    """
-    새 글 배포 후 구글 서치콘솔에 사이트맵 핑을 전송하여
-    구글봇의 신속한 크롤링과 색인을 요청하는 모듈
-    """
+    def __init__(self, config):
+        self.site_url = config.get("site", {}).get("url", "").rstrip("/")
 
-    def __init__(self, config: Dict[str, Any]):
-        self.config = config
-        self.site_url = config.get("site", {}).get("url", "https://yourusername.github.io").rstrip("/")
+    def check_sitemap(self):
+        for name in ("sitemap-index.xml", "sitemap.xml"):
+            url = f"{self.site_url}/{name}"
+            try:
+                response = requests.get(url, timeout=5, allow_redirects=False)
+                if response.status_code == 200 and ElementTree.fromstring(response.content).tag.split("}")[-1] in ("sitemapindex", "urlset"):
+                    return {"available": True, "url": url, "indexing_status": "unknown",
+                            "message": "사이트맵 응답 확인. 색인 여부는 Search Console에서 확인해야 합니다."}
+            except (requests.RequestException, ElementTree.ParseError):
+                continue
+        return {"available": False, "indexing_status": "unknown", "message": "사이트맵 응답을 확인하지 못했습니다."}
 
-    def ping_sitemap(self) -> bool:
-        """구글 및 빙에 사이트맵 업데이트 핑 전송"""
-        sitemap_url = f"{self.site_url}/sitemap.xml"
-        google_ping = f"https://www.google.com/ping?sitemap={sitemap_url}"
-        bing_ping = f"https://www.bing.com/ping?sitemap={sitemap_url}"
-
-        success = True
-        try:
-            r1 = requests.get(google_ping, timeout=5)
-            print(f"📡 Google Sitemap Ping: {r1.status_code}")
-        except Exception as e:
-            print(f"Google Ping 알림: {e}")
-            success = False
-
-        try:
-            r2 = requests.get(bing_ping, timeout=5)
-            print(f"📡 Bing Sitemap Ping: {r2.status_code}")
-        except Exception:
-            pass
-
-        return success
+    def ping_sitemap(self):
+        """Compatibility alias; deprecated Google/Bing ping endpoints are never called."""
+        return self.check_sitemap()["available"]

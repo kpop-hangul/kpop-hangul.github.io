@@ -1,5 +1,7 @@
 """Bounded content checks, not factual verification or an AdSense prediction."""
 import re
+import hashlib
+import json
 from datetime import date, datetime
 
 
@@ -46,6 +48,73 @@ def validate_metadata(article):
                 raise ContentValidationError("summaryCards icon은 문자열이어야 합니다.")
 
 
+def _operations_digest(value):
+    # Keep the coordinator's blogops.content.digest serialization contract exactly.
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
+
+
+def validate_operations_gate(article):
+    """Verify the stored review still applies to this article, not a fresh fact audit.
+
+    Legacy articles have no operations metadata. A present but malformed/stale gate
+    cannot silently downgrade an orchestrated article into that legacy path.
+    """
+    if "operations" not in article:
+        return
+    operations = article["operations"]
+    if not isinstance(operations, dict) or not isinstance(operations.get("workflow_id"), str) or not operations["workflow_id"].strip():
+        raise ContentValidationError("operations 워크플로 식별자가 없거나 유효하지 않습니다.")
+    gate, review = operations.get("gate"), operations.get("review")
+    if not isinstance(gate, dict) or gate.get("status") != "passed" or not isinstance(review, dict):
+        raise ContentValidationError("통과한 근거 검토 gate와 review가 필요합니다.")
+    if any(not isinstance(gate.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", gate[key]) for key in ("article_hash", "review_hash")):
+        raise ContentValidationError("검토 gate의 article_hash/review_hash가 유효하지 않습니다.")
+    article_revision = {key: value for key, value in article.items() if key != "operations"}
+    if gate["article_hash"] != _operations_digest(article_revision):
+        raise ContentValidationError("근거 검토 후 글의 본문·메타데이터·이미지가 변경되었습니다. 팀 검토를 다시 실행하세요.")
+    if gate["review_hash"] != _operations_digest(review):
+        raise ContentValidationError("근거 검토 보고서가 gate에 기록된 버전과 다릅니다.")
+    try:
+        checked_at = gate["checked_at"]
+        if not isinstance(checked_at, str) or datetime.fromisoformat(checked_at.replace("Z", "+00:00")).tzinfo is None:
+            raise ValueError()
+    except (KeyError, ValueError, TypeError):
+        raise ContentValidationError("검토 gate에 시간대가 포함된 checked_at이 필요합니다.") from None
+    evidence_ids = gate.get("evidence_ids")
+    if (not isinstance(evidence_ids, list) or not evidence_ids
+            or any(not isinstance(item, str) or not item.strip() for item in evidence_ids)
+            or len(set(evidence_ids)) != len(evidence_ids)):
+        raise ContentValidationError("검토 gate의 근거 ID 목록이 없거나 유효하지 않습니다.")
+    if (review.get("decision") != "pass" or review.get("rights") != "clear" or review.get("issues")
+            or not isinstance(review.get("original_value"), str) or not review["original_value"].strip()
+            or review.get("coverage_checked") is not True or review.get("requires_expert_review") is not False):
+        raise ContentValidationError("독립 검토의 통과·권리·근거 범위·전문 검토 조건이 충족되지 않았습니다.")
+    if "image_manifest" in gate:
+        manifest = gate["image_manifest"]
+        if not isinstance(manifest, list):
+            raise ContentValidationError("검토 gate의 image_manifest는 배열이어야 합니다.")
+        seen = set()
+        for item in manifest:
+            if (not isinstance(item, dict) or not isinstance(item.get("url"), str)
+                    or not item["url"].startswith("/images/") or item["url"] in seen
+                    or not isinstance(item.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])):
+                raise ContentValidationError("검토 gate 이미지 경로·SHA256이 없거나 중복되었습니다.")
+            seen.add(item["url"])
+    claims = review.get("claims")
+    if not isinstance(claims, list) or not claims:
+        raise ContentValidationError("근거와 연결된 검토 주장 목록이 필요합니다.")
+    text = article.get("title", "") + "\n" + article.get("markdown_content", "")
+    for claim in claims:
+        if not isinstance(claim, dict):
+            raise ContentValidationError("검토 주장은 객체여야 합니다.")
+        source, statement, quote = claim.get("source_id"), claim.get("claim"), claim.get("quote")
+        if not isinstance(source, str) or source not in evidence_ids:
+            raise ContentValidationError("검토 주장의 출처가 gate 근거 목록에 없습니다.")
+        if (claim.get("assessment") != "supported" or not isinstance(statement, str) or len(statement.strip()) < 8
+                or statement not in text or not isinstance(quote, str) or len(quote.strip()) < 12):
+            raise ContentValidationError("검토 주장·근거 인용이 불완전하거나 현재 본문과 다릅니다.")
+
+
 def validate_article(article, topic=None):
     if not isinstance(article, dict):
         raise ContentValidationError("글 응답은 JSON 객체여야 합니다.")
@@ -58,6 +127,7 @@ def validate_article(article, topic=None):
     faqs = article.get("faqs", [])
     if not isinstance(faqs, list) or any(not isinstance(f, dict) or not all(isinstance(f.get(k), str) and f[k].strip() for k in ("question", "answer")) for f in faqs):
         raise ContentValidationError("FAQ는 비어 있지 않은 question/answer 객체 배열이어야 합니다.")
+    validate_operations_gate(article)
     if article["markdown_content"].lstrip().startswith("---"):
         raise ContentValidationError("본문 안에 frontmatter를 넣을 수 없습니다.")
     if article.get("generation_status") == "failed":

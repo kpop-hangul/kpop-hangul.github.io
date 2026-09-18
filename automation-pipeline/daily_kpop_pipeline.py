@@ -107,46 +107,32 @@ def save_markdown_post(article: Dict[str, Any], slug: str) -> str:
     return post_file
 
 
+def _song_slug(article):
+    return generate_slug(article.get("artist", "kpop"), article.get("songTitle", "song"), datetime.now().strftime("%Y-%m-%d"))
+
+
 @serialize_publication
-def publish_queued_draft(config, draft_id, *, human_approved=False):
-    queue = DraftApprovalQueue(ROOT_DIR)
-    draft = queue.get_draft(draft_id)
-    if not draft:
-        return False, "초안을 찾을 수 없습니다."
-    if draft.get("status") == "published":
-        return True, draft.get("published_url", "")
-    if human_approved is not True or draft.get("status") not in ("pending_review", "approved"):
-        return False, "검토 가능한 초안에 대한 사람의 승인이 필요합니다."
-    article = dict(draft.get("article", {}))
-    song = draft.get("topic", {})
-    article["slug"] = article.get("slug") or generate_slug(article.get("artist", "kpop"), article.get("songTitle", "song"), datetime.now().strftime("%Y-%m-%d"))
-    try:
-        validate_article(article)
-        if not queue.mark_approved(draft["draft_id"]):
-            return False, "승인 저장 실패"
-        publisher = GitHubPublisher(config)
-        slug = article["slug"]
-        # Legacy K-Pop queues used existing_slug for brand-new drafts too.
-        existing_slug = draft.get("existing_slug")
-        if existing_slug and publisher._path(existing_slug).is_file():
-            _, slug = publisher.update_existing_article(existing_slug, article, human_approved=True)
-        elif publisher._path(slug).is_file() and draft.get("status") == "approved":
-            # Retry a previously failed push only when the saved content is the same revision.
-            meta, body = publisher._read_post(publisher._path(slug))
-            from modules.content_validation import body_fingerprint
-            if meta.get("title") != article["title"] or body_fingerprint(body) != body_fingerprint(article["markdown_content"]):
-                raise ValueError("저장된 글이 승인된 초안과 다릅니다. 기존 글 수정으로 검토하세요.")
-            publisher._git_commit_and_push(str(publisher._path(slug)), article["title"], slug=slug, article=article)
-        else:
-            publisher.publish_article(article, human_approved=True)
-        url = config.get("site", {}).get("url", "https://kpop-hangul.github.io").rstrip("/") + f"/blog/{slug}/"
-        save_published_song({**song, **article, "slug": slug, "pubDate": datetime.now().strftime("%Y-%m-%d")})
-        if not queue.mark_published(draft["draft_id"], slug, url):
-            return False, "Git 작업 완료 후 큐 저장 실패. 상태 확인이 필요합니다."
-    except Exception as exc:
-        return False, f"발행 실패: {type(exc).__name__}: {exc}"
-    TelegramNotifier(config).send_article_published(article, {"score": draft.get("review", {}).get("total_score", 0), "char_count": len(article["markdown_content"])}, url)
-    return True, url
+def publish_queued_draft(config, draft_id, *, human_approved=False, expected_review_token=None):
+    from modules.publication_workflow import submit
+    return submit(config, draft_id, DraftApprovalQueue(ROOT_DIR), GitHubPublisher,
+                  human_approved=human_approved, slug_factory=_song_slug, expected_review_token=expected_review_token)
+
+
+@serialize_publication
+def reconcile_queued_draft(config, draft_id):
+    from modules.publication_workflow import reconcile
+
+    def after_verified(draft, record):
+        save_published_song({**draft.get("topic", {}), **draft["article"], "slug": record["slug"],
+                             "pubDate": draft["article"].get("pubDate") or record["created_at"][:10]})
+
+    def notify(draft, record):
+        TelegramNotifier(config).send_article_published(draft["article"], {
+            "score": draft.get("review", {}).get("total_score", 0),
+            "char_count": len(draft["article"].get("markdown_content", ""))}, record["url"])
+
+    return reconcile(config, draft_id, DraftApprovalQueue(ROOT_DIR), GitHubPublisher,
+                     after_verified=after_verified, notify=notify, slug_factory=_song_slug)
 
 
 def run_daily_pipeline(count: int = 1, specific_song: Optional[Dict[str, Any]] = None, dry_run: bool = False, auto_approve: bool = False):
@@ -157,6 +143,9 @@ def run_daily_pipeline(count: int = 1, specific_song: Optional[Dict[str, Any]] =
     print("=" * 75)
 
     config = load_config()
+    from modules.generation_control import legacy_generation_allowed
+    if not legacy_generation_allowed(config):
+        return
     writer = ContentWriter(config)
     reviewer = EditorialReviewAgent(config)
     queue = DraftApprovalQueue(ROOT_DIR)
@@ -244,12 +233,21 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Run without writing files or queuing")
     parser.add_argument("--approve", action="store_true", help="호환 옵션: 자동 발행하지 않고 검토 큐에 저장")
     parser.add_argument("--publish-draft", type=str, default=None, help="대기 큐의 특정 draft_id 승인 및 발행")
+    parser.add_argument("--reconcile-draft", help="승인된 초안의 실제 배포 확인")
+    parser.add_argument("--reconcile-all", action="store_true", help="배포 대기 승인 초안 전체 확인")
     parser.add_argument("--reject-draft", type=str, default=None, help="대기 큐의 특정 draft_id 보류")
     parser.add_argument("--list-queue", action="store_true", help="대기 큐 목록 조회")
     parser.add_argument("--mode", type=str, default="auto", help="실행 모드")
 
     args = parser.parse_args()
     config = load_config()
+
+    if args.reconcile_draft or args.reconcile_all:
+        ids = [args.reconcile_draft] if args.reconcile_draft else [d["draft_id"] for d in DraftApprovalQueue(ROOT_DIR).list_deployments()]
+        for draft_id in ids:
+            success, message = reconcile_queued_draft(config, draft_id)
+            print(f"{draft_id}: {'발행 확인 완료' if success else '배포 확인 대기'}: {message}")
+        sys.exit(0)
 
     if args.list_queue:
         queue = DraftApprovalQueue(ROOT_DIR)
@@ -265,7 +263,7 @@ if __name__ == "__main__":
         if success:
             print(f"🎉 성공적으로 발행되었습니다: {res}")
         else:
-            print(f"❌ 발행 실패: {res}")
+            print(f"⏳ 발행 상태: {res}")
         sys.exit(0 if success else 1)
 
     if args.reject_draft:

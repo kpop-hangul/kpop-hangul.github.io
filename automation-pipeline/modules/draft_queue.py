@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import hashlib
 from functools import wraps
 from uuid import uuid4
 from modules.atomic_storage import atomic_json, file_lock
@@ -13,6 +14,21 @@ def locked(method):
     return invoke
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+
+def article_review_token(article):
+    """Short content revision for Telegram callback data (not authentication)."""
+    return hashlib.sha256(json.dumps(article, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()[:12]
+
+
+def approval_fingerprint(draft):
+    """Bind approval to every article field and the selected update target."""
+    payload = {"article": draft.get("article", {}), "existing_slug": draft.get("existing_slug")}
+    return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
+
+
+def approval_is_current(draft):
+    return bool(draft.get("approved_fingerprint")) and draft["approved_fingerprint"] == approval_fingerprint(draft)
+
 
 class DraftApprovalQueue:
     """
@@ -122,10 +138,12 @@ class DraftApprovalQueue:
 
         for d in data:
             if target and d.get("draft_id") == target:
-                if d.get("status") == "published":
+                if d.get("status") in ("published", "pushed", "deployment_pending") or d.get("publication", {}).get("commit_sha"):
                     return False
                 d["status"] = "pending_review"
                 d.pop("approved_at", None)
+                d.pop("approved_fingerprint", None)
+                d.pop("publication", None)
                 d["article"] = {**d.get("article", {}), **new_article}
                 if "title" in new_article and new_article["title"].strip():
                     d["title"] = new_article["title"].strip()
@@ -194,6 +212,9 @@ class DraftApprovalQueue:
         target = resolved.get("draft_id") if resolved else None
         for d in data:
             if target and d.get("draft_id") == target:
+                if d.get("status") not in ("pending_review", "approved"):
+                    return False
+                d["approved_fingerprint"] = approval_fingerprint(d)
                 d["status"] = "approved"
                 d["approved_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 return self._save_data(data)
@@ -207,6 +228,8 @@ class DraftApprovalQueue:
         target = resolved.get("draft_id") if resolved else None
         for d in data:
             if target and d.get("draft_id") == target:
+                if not approval_is_current(d) or d.get("publication", {}).get("verification", {}).get("status") != "verified":
+                    return False
                 d["status"] = "published"
                 d["published_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 d["post_slug"] = post_slug
@@ -223,11 +246,35 @@ class DraftApprovalQueue:
         target = resolved.get("draft_id") if resolved else None
         for d in data:
             if target and d.get("draft_id") == target:
+                if d.get("status") in ("published", "pushed", "deployment_pending") or d.get("publication", {}).get("commit_sha"):
+                    return False
+                d.pop("approved_fingerprint", None)
+                d.pop("approved_at", None)
+                d.pop("publication", None)
                 d["status"] = "rejected"
                 d["rejected_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 d["rejection_reason"] = reason
                 return self._save_data(data)
         return False
+
+    @locked
+    def record_publication(self, draft_id, publication, status=None):
+        """Persist progress before another irreversible publication step."""
+        data = self._load_data()
+        draft = self._resolve(data, draft_id)
+        if not draft or not approval_is_current(draft):
+            return False
+        if draft.get("status") not in ("approved", "pushed", "deployment_pending", "published"):
+            return False
+        if status and status not in ("approved", "pushed", "deployment_pending", "published"):
+            raise ValueError("Invalid publication status")
+        draft["publication"] = {**draft.get("publication", {}), **publication}
+        if status:
+            draft["status"] = status
+        return self._save_data(data)
+
+    def list_deployments(self):
+        return [d for d in self._load_data() if d.get("status") in ("approved", "pushed", "deployment_pending")]
 
 
 def serialize_publication(function):
