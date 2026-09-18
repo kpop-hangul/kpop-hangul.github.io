@@ -39,6 +39,12 @@ class OperationsGateTests(unittest.TestCase):
         article['operations']['gate']['evidence_ids'].append('additional-source')
         validate_article(article)
 
+    def test_review_claim_can_refer_to_description(self):
+        article=reviewed_article()
+        article['operations']['review']['claims'][0]['claim']=article['description']
+        rehash_review(article)
+        validate_article(article)
+
     def test_legacy_article_without_operations_remains_supported(self):
         article = reviewed_article(); article.pop('operations')
         validate_article(article)

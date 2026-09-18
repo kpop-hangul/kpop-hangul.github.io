@@ -103,7 +103,7 @@ def validate_operations_gate(article):
     claims = review.get("claims")
     if not isinstance(claims, list) or not claims:
         raise ContentValidationError("근거와 연결된 검토 주장 목록이 필요합니다.")
-    text = article.get("title", "") + "\n" + article.get("markdown_content", "")
+    text = article.get("title", "") + "\n" + article.get("description", "") + "\n" + article.get("markdown_content", "")
     for claim in claims:
         if not isinstance(claim, dict):
             raise ContentValidationError("검토 주장은 객체여야 합니다.")
