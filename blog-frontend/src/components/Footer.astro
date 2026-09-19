@@ -17,10 +17,10 @@ const currentYear = new Date().getFullYear();
           <span class="font-bold text-white text-base tracking-tight">{siteConfig.site.name}</span>
         </div>
         <p class="text-sm text-slate-400 max-w-sm leading-relaxed mb-4">
-          Master the Korean language naturally through chart-topping K-Pop songs from Melon and Spotify. Line-by-line Hangul lyrics, Romanization, vocabulary tables, and grammar rules.
+          Find your starting point with our English-language Hangul guide, letter charts, and syllable diagrams.
         </p>
         <p class="text-xs text-slate-500">
-          Powered by Static Site Engine (Astro) & Daily Chart Intelligence
+          Read at your own pace and return to the alphabet reference whenever you need it.
         </p>
       </div>
 
@@ -28,6 +28,7 @@ const currentYear = new Date().getFullYear();
       <div>
         <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-3">By Difficulty Level</h3>
         <ul class="space-y-2 text-sm text-slate-400">
+          <li><a href={`${base}/start/`} class="hover:text-white transition-colors text-indigo-300 font-semibold">Start here: Hangul reading path</a></li>
           <li><a href={`${base}/difficulty/beginner/`} class="hover:text-indigo-400 transition-colors">🟢 Beginner (Level 1)</a></li>
           <li><a href={`${base}/difficulty/intermediate/`} class="hover:text-amber-400 transition-colors">🟡 Intermediate (Level 2)</a></li>
           <li><a href={`${base}/difficulty/advanced/`} class="hover:text-rose-400 transition-colors">🔴 Advanced (Level 3)</a></li>

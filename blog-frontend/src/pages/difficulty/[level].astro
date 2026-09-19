@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import FoundationLinks from '../../components/FoundationLinks.astro';
 import Card from '../../components/Card.astro';
 import { getDifficultySlug, getDifficultyName } from '../../utils/slug';
 
@@ -48,6 +49,8 @@ const levelBadges: Record<string, string> = {
       <span>/</span>
       <span class="text-indigo-600 font-semibold">{levelName}</span>
     </nav>
+
+    <FoundationLinks />
 
     <!-- Header -->
     <div class="mb-10">

@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import AdSense from '../components/AdSense.astro';
 import TableOfContents from '../components/TableOfContents.astro';
+import FoundationLinks from '../components/FoundationLinks.astro';
 import RelatedPosts from '../components/RelatedPosts.astro';
 import { getDifficultySlug, getGenreSlug, getArtistSlug, getDifficultyName } from '../utils/slug';
 import type { CollectionEntry } from 'astro:content';
@@ -163,6 +164,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
     <AdSense slotId="1234567890" type="top-banner" />
 
     <!-- Table of Contents -->
+    <FoundationLinks />
     <TableOfContents headings={headings} />
 
     <!-- Article Markdown Content -->
@@ -514,4 +516,3 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
     }
   </style>
 </BaseLayout>
-
